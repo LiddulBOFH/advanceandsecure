@@ -1,12 +1,14 @@
 include("shared.lua")
 local LP = LocalPlayer()
 
-AAS.ServerRAAS = nil
-AAS.RAASLine = nil
-AAS.RAASLookup = nil
-AAS.RAASFinished = false
+AAS.ServerRAAS		= nil
+AAS.RAASLine		= nil
+AAS.RAASLookup		= nil
+AAS.RAASFinished	= false
+AAS.RAASQueued		= false
 
-AAS.LocalAlias = {["SpawnA"] = "SpawnA",["SpawnB"] = "SpawnB"}
+-- Default values for point names, to be overridden when RAAS info is received
+AAS.LocalAlias		= {["SpawnA"] = "SpawnA",["SpawnB"] = "SpawnB"}
 
 local PointBaseColor = Color(65,65,65)
 local PlyColor = Color(0,127,0)
@@ -16,8 +18,6 @@ local SM = {x = SW / 2, y = SH / 2}
 local UU = ((SW > SH) and SH or SW) / 12
 
 local HUDHide = {["CHudHealth"] = true,["CHUDQuickInfo"] = true,["CHudBattery"] = true}
-
-concommand.Remove("votemap") -- Removes common votemap command, particularly important and cheap for me to do for BAdmin
 
 local HintList = {}
 --HintList[#HintList + 1] = {time = 5,text = ""}
@@ -29,7 +29,7 @@ HintList[#HintList + 1] = {time = 5,text = "You can noclip, but only inside of y
 HintList[#HintList + 1] = {time = 7.5,text = "Press E on your home flag to change loadout!\nAmmo is also free from here."}
 HintList[#HintList + 1] = {time = 5,text = "That armor might be beneficial to your survival..."}
 HintList[#HintList + 1] = {time = 7.5,text = "Capturing points gives your team tickets!\nKilling enemies makes them lose tickets!"}
-HintList[#HintList + 1] = {time = 7.5,text = "Points are considered 'captured' at 25%, but capturing more doesn't hurt"}
+HintList[#HintList + 1] = {time = 7.5,text = "Points are considered 'captured' at 25%, but capturing more is always better!"}
 
 local DupeCost = {Draw = false}
 
@@ -45,8 +45,14 @@ local function setupRAASLocal()
 
 	for k,v in ipairs(AAS.RAASLine) do
 		AAS.RAASLookup[v] = k
-		if not IsValid(v) then net.Start("aas_playerinit") net.SendToServer() return end
-		v:SetPredictable(true)
+		if not IsValid(v) then
+			if not AAS.RAASQueued then
+				net.Start("aas_playerinit")
+				net.SendToServer()
+			end
+
+			return
+		end
 	end
 
 	AAS.RAASFinished = true
@@ -1503,6 +1509,7 @@ do  -- Stuff to organize
 			AAS.ServerRAAS = net.ReadTable()
 			AAS.PointAlias = net.ReadTable()
 			AAS.RAASLookup = {}
+			AAS.RAASQueued = false
 
 			AAS.RAASFinished = false
 
@@ -1661,7 +1668,13 @@ do  -- Stuff to organize
 
 	do	-- Hooks
 		-- Requests information about the running game, like the points and how they are connected
+
 		local function requestInfo()
+			if AAS.RAASQueued then return end
+
+			timer.Simple(5,function() AAS.RAASQueued = false end)
+			AAS.RAASQueued = true
+
 			net.Start("aas_playerinit")
 			net.SendToServer()
 		end

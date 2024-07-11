@@ -199,6 +199,7 @@ else
 	function SeatMan.AddSeat(Ply, Seat)
 		local plyTeam = Ply:Team()
 		if SeatMan.Seats[Ply] == nil then SeatMan.Seats[Ply] = {} end
+
 		SeatMan.Seats[Ply][Seat] = plyTeam
 		SeatMan.SeatOwnedBy[Seat] = Ply
 	end
@@ -228,6 +229,7 @@ else
 	end)
 
 	hook.Add("CanPlayerEnterVehicle", "AAS_SeatSystem", function(Ply, Seat)
+		if not SeatMan.SeatOwnedBy[Seat] then SeatMan.AddSeat(Ply, Seat) return true end -- Spawning seats by other means doesn't use the normal spawn hook, e.g. SitAnywhere
 		if Ply:GetShootPos():DistToSqr(Seat:GetPos()) > SeatMan.MaxDistance then return false end
 		if SeatMan.SeatOwnedBy[Seat]:Team() ~= Ply:Team() then return false end
 		return true
