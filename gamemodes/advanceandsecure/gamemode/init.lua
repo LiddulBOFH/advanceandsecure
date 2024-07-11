@@ -1490,6 +1490,7 @@ do	-- Organizing stuff :)
 				aasMsg({Colors.ErrorCol,"You aren't allowed to spawn '" .. victable.Name  .. "'!"},ply)
 				return false
 			end
+			if not PlyInSafezone(ply,ply:GetPos()) then aasMsg({Colors.ErrorCol,"You can't spawn props outside of the safezone!"},ply) return false end
 			return true
 		end)
 

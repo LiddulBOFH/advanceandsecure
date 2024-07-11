@@ -17,6 +17,8 @@ local UU = ((SW > SH) and SH or SW) / 12
 
 local HUDHide = {["CHudHealth"] = true,["CHUDQuickInfo"] = true,["CHudBattery"] = true}
 
+concommand.Remove("votemap") -- Removes common votemap command, particularly important and cheap for me to do for BAdmin
+
 local HintList = {}
 --HintList[#HintList + 1] = {time = 5,text = ""}
 HintList[#HintList + 1] = {time = 7.5,text = "You gain or lose karma depending on how you play.\nCapturing points gives you GOOD karma (but only if you aren't sitting!).\nTeamkilling or being in the enemy safezone gives you BAD karma."}
