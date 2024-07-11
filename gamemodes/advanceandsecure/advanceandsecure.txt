@@ -1,0 +1,7 @@
+"advanceandsecure"
+{
+	"base"	"base"
+	"title"	"Advance and Secure"
+	"category"	"pvp"
+	"menusystem"	"1"
+}
