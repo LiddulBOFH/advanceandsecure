@@ -54,6 +54,7 @@ Colors = {
 
 include("libs/loadouts.lua")
 include("libs/seatsystem.lua")
+include("libs/costcalc.lua")
 
 function GM:CreateTeams()
 	team.SetUp(1,"A",AAS.TeamData[1]["Color"],true)
@@ -180,3 +181,5 @@ hook.Add("PlayerNoClip","AAS_Noclip",function(ply,state)
 
 	if PlyInSafezone(ply,ply:GetPos()) then return true else return false end
 end)
+
+hook.Add("ACF_PreBeginScanning", "ScanHalt", function() return false, "Disabled by gamemode." end)

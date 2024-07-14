@@ -537,6 +537,10 @@ function GM:Initialize()
 
 	MsgN("--== ACF Advance and Secure v0.5 ==--")
 
+	RunConsoleCommand("physgun_maxrange", 256)
+	RunConsoleCommand("physgun_maxspeed", 400)
+	RunConsoleCommand("physgun_maxangular", 400)
+
 	if not file.Exists("aas","DATA") then
 		MsgN("Missing base directory 'aas', making...")
 		file.CreateDir("aas/maps")
@@ -612,121 +616,11 @@ end
 local NextReqCheck = ST()
 
 AAS.PlyReq = {}
-AAS.RequisitionCosts = {}
-
-AAS.RequisitionCosts.CalcSingleFilter = {
-	gmod_wire_expression2 = 2.5,
-	starfall_processor = 2.5,
-	acf_piledriver = 5,
-	acf_rack = 10,
-	acf_engine = 1,
-	prop_physics = 1,
-	acf_armor = 1,
-	acf_gun = 1,
-	acf_ammo = 1,
-	acf_radar = 10,
-	gmod_wire_gate = 1,
-	primitive_shape = 1
-}
 
 local FilterList = {}
 for k,v in pairs(AAS.RequisitionCosts.CalcSingleFilter) do
 	table.insert(FilterList,k)
 end
-
-AAS.RequisitionCosts.ACFGunCost = { -- anything not on here costs 1
-	SB = 1, -- old smoothbores, leaving
-	C = 0.9,
-	SC = 0.7,
-	AC = 1.2,
-	LAC = 1.1,
-	HW = 0.75,
-	MO = 0.75,
-	RAC = 2,
-	SA = 1,
-	AL = 1.1,
-	GL = 0.75,
-	MG = 0.1,
-	SL = 0.02,
-	FGL = 0.125
-}
-
-AAS.RequisitionCosts.ACFAmmoModifier = { -- Anything not in here is 0.2
-	AP = 0.3,
-	APCR = 0.4,
-	APDS = 0.55,
-	APFSDS = 0.7,
-	APHE = 0.3,
-	HE = 0.25,
-	HEAT = 0.35,
-	HEATFS = 0.45,
-	FL = 0.25,
-	HP = 0.1,
-	SM = 0.1,
-	GLATGM = 1.5,
-	FLR = 0.05,
-}
-
-AAS.RequisitionCosts.ACFMissileModifier = { -- Default 5
-	ATGM = 6,
-	AAM = 5,
-	ARM = 2.5,
-	ARTY = 5,
-	BOMB = 5, -- Dumb bomb
-	FFAR = 2,
-	GBOMB = 5, -- Glide bomb
-	GBU = 7.5, -- Guided bomb
-	SAM = 2.5,
-	UAR = 4,
-}
-
-AAS.RequisitionCosts.SpecialModelFilter = { -- any missile rack not in here costs 10 points
-	["models/failz/b8.mdl"] = 20,
-	["models/failz/lau_61.mdl"] = 15,
-	["models/failz/ub_16.mdl"] = 15,
-	["models/failz/ub_32.mdl"] = 20,
-	["models/ghosteh/lau10.mdl"] = 15,
-
-	["models/missiles/rk3uar.mdl"] = 15,
-
-	["models/spg9/spg9.mdl"] = 7.5,
-
-	["models/kali/weapons/kornet/parts/9m133 kornet tube.mdl"] = 15,
-	["models/missiles/9m120_rk1.mdl"] = 15,
-	["models/missiles/at3rs.mdl"] = 10,
-	["models/missiles/at3rk.mdl"] = 10,
-
-	-- BIG rack, can hold lots of boom
-	["models/missiles/6pod_rk.mdl"] = 25,
-
-	-- YUGE fuckin tube, launches a 380mm rocket
-	["models/launcher/rw61.mdl"] = 35,
-
-	["models/missiles/agm_114_2xrk.mdl"] = 15,
-	["models/missiles/agm_114_4xrk.mdl"] = 20,
-
-	["models/missiles/launcher7_40mm.mdl"] = 12,
-	["models/missiles/launcher7_70mm.mdl"] = 16,
-
-	["models/missiles/bgm_71e_round.mdl"] = 15,
-	["models/missiles/bgm_71e_2xrk.mdl"] = 17.5,
-	["models/missiles/bgm_71e_4xrk.mdl"] = 20,
-
-	["models/missiles/fim_92_1xrk.mdl"] = 7.5,
-	["models/missiles/fim_92_2xrk.mdl"] = 10,
-	["models/missiles/fim_92_4xrk.mdl"] = 15,
-
-	["models/missiles/9m31_rk1.mdl"] = 10,
-	["models/missiles/9m31_rk2.mdl"] = 15,
-	["models/missiles/9m31_rk4.mdl"] = 20,
-
-	["models/missiles/bomb_3xrk.mdl"] = 20,
-
-	["models/missiles/rkx1_sml.mdl"] = 10,
-	["models/missiles/rkx1.mdl"] = 10,
-	["models/missiles/rack_double.mdl"] = 15,
-	["models/missiles/rack_quad.mdl"] = 20
-}
 
 local DupeList = nil
 local function BuildDupeList()
@@ -843,35 +737,6 @@ local function Payday(ply) -- gives targetted player (or all players if nil is g
 	end
 end
 
-local function CalcCost(E)
-	local Class = E:GetClass()
-	if not AAS.RequisitionCosts.CalcSingleFilter[Class] then return 0 end
-	local Cost = AAS.RequisitionCosts.CalcSingleFilter[Class] or 1
-
-	if Class == "acf_gun" then
-		Cost = (AAS.RequisitionCosts.ACFGunCost[E.Class] or 1) * E.Caliber
-	elseif Class == "acf_armor" or Class == "prop_physics" or Class == "primitive_shape" or Class == "gmod_wire_gate" then
-		local phys = E:GetPhysicsObject()
-		if IsValid(phys) then Cost = 0.1 + math.max(0.01,phys:GetMass() / 500) else Cost = 1 end
-	elseif Class == "acf_engine" then
-		Cost = math.max(5,E.PeakTorque / 100)
-	elseif Class == "acf_rack" then
-		if AAS.RequisitionCosts.SpecialModelFilter[E:GetModel()] then Cost = AAS.RequisitionCosts.SpecialModelFilter[E:GetModel()] else Cost = 10 end
-	elseif Class == "acf_radar" then
-		Cost = math.max(10,0)
-	elseif Class == "acf_ammo" then
-		if E.AmmoType == "Refill" then
-			Cost = E.Capacity * 0.05
-		elseif E.IsMissileAmmo then -- Only present on crates that actually hold ACF-3 Missiles ammo, courtesy of a hook intercept in ACF-3 Missiles
-			Cost = E.Capacity * (AAS.RequisitionCosts.ACFAmmoModifier[E.AmmoType] or 0.2) * (AAS.RequisitionCosts.ACFMissileModifier[E.Class] or 10) * math.max(1,(E.Caliber / 100) ^ 1.5)
-		else
-			Cost = E.Capacity * (AAS.RequisitionCosts.ACFAmmoModifier[E.AmmoType] or 0.2) * ((E.Caliber / 100) ^ 2) * (AAS.RequisitionCosts.ACFGunCost[E.Class] or 1)
-		end
-	end
-
-	return Cost
-end
-
 function CalcRequisition()
 	if ST() < NextReqCheck then return end
 	local Ents = {}
@@ -893,7 +758,9 @@ function CalcRequisition()
 		if (Owner ~= World) or false then
 			table.insert(Ents,ent)
 			EntLookup[ent] = Owner
+
 			if not PlyEnts[Owner] then PlyEnts[Owner] = {} end
+
 			table.insert(PlyEnts[Owner],ent)
 		end
 	end
@@ -905,7 +772,7 @@ function CalcRequisition()
 		if not AAS.RequisitionCosts.CalcSingleFilter[Class] then continue end
 
 		local Owner = ent:CPPIGetOwner()
-		local Cost = CalcCost(ent)
+		local Cost = AAS.CalcCost(ent)
 
 		AAS.PlyReq[Owner] = (AAS.PlyReq[Owner] or 0) + Cost
 	end
@@ -928,7 +795,7 @@ function CalcSingleRequisition(Ents)
 	for _,ent in pairs(Ents) do
 		local Class = ent:GetClass()
 		if not AAS.RequisitionCosts.CalcSingleFilter[Class] then continue end
-		local Cost = CalcCost(ent)
+		local Cost = AAS.CalcCost(ent)
 
 		if not CostBreakdown[ent:GetClass()] then CostBreakdown[ent:GetClass()] = 0 end
 
@@ -1413,10 +1280,11 @@ do	-- Organizing stuff :)
 		-- Prevents using physgun at full range outside of the player's spawnzone, otherwise allow full usage
 		local PhysDist = 256^2
 		hook.Add("PhysgunPickup","AAS_PhysgunLimit",function(ply,ent)
-			if GetGlobalBool("EditMode",false) == true then return else return false end
 			if PlyInSafezone(ply,ply:GetPos()) and InSafezone(ent:GetPos()) then return true end
 
 			if ply:GetPos():DistToSqr(ent:GetPos()) < PhysDist then return true end
+
+			if GetGlobalBool("EditMode",false) == true then return true else return false end
 		end)
 
 		-- Prevents anyone not an admin from editing gamemode entities, and only allowable while EditMode is on

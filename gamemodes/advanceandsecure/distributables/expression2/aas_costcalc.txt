@@ -25,6 +25,7 @@ if(first()){
     AASCostInfo["ACFAmmoModifier",table] = table(%s)
     AASCostInfo["ACFMissileModifier",table] = table(%s)
     AASCostInfo["SpecialModelFilter",table] = table(%s)
+    AASCostInfo["ACFRadars",table] = table(%s)
 
     findClearWhiteList()
     foreach(_:number,V:string = AASCostInfo["FilterList",table]){findIncludeClass(V)}
@@ -109,6 +110,24 @@ function number calcCost(E:entity){
                 Cost = Capacity * AmmoMod * GunClassMod * ((E:acfCaliber() / 100) ^ 2)
             }
         break,
+        case "acf_radar",
+            if(AASCostInfo["ACFRadars",table]:exists(E:acfNameShort())){Cost = AASCostInfo["ACFRadars",table][E:acfNameShort(),number]}
+            else{Cost = 50}
+        break,
+        case "acf_turret",
+            local TD = E:acfGetTurretData()
+            Cost = 1 + (TD["RingSize",number] / 6)
+        break,
+        case "acf_turret_gyro",
+            Cost = E:acfIsGyroDual() ? 8 : 4
+        break,
+        case "acf_turret_computer",
+            Cost = 5
+        break,
+        case "acf_turret_motor",
+            local MotorData = E:acfGetTurretMotorData()
+            Cost = 2 * MotorData["CompSize",number]
+        break
     }
     return Cost
 }

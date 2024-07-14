@@ -1615,6 +1615,15 @@ do  -- Stuff to organize
 				end
 			end
 
+			for k,v in pairs(CostInfo.ACFRadars) do
+				local Str = "\"" .. k .. "\"=" .. v
+				if not CostBreakdown.ACFRadars then
+					CostBreakdown.ACFRadars = Str
+				else
+					CostBreakdown.ACFRadars = CostBreakdown.ACFRadars .. "," .. Str
+				end
+			end
+
 			local FinalCode = string.format(E2Code,
 				util.DateStamp(),
 				CostBreakdown.FilterList,
@@ -1622,7 +1631,8 @@ do  -- Stuff to organize
 				CostBreakdown.ACFGunCost,
 				CostBreakdown.ACFAmmoModifier,
 				CostBreakdown.ACFMissileModifier,
-				CostBreakdown.SpecialModelFilter)
+				CostBreakdown.SpecialModelFilter,
+				CostBreakdown.ACFRadars)
 
 			if not file.Exists("expression2/AAS","DATA") then file.CreateDir("expression2/AAS") end
 			file.Write("expression2/AAS/aas_costcalc.txt",FinalCode)

@@ -1,6 +1,6 @@
 -- Provides team-based seating systems
 AddCSLuaFile()
-print("SEAT SYSTEM LOADED")
+MsgN("+ Seat system loaded")
 
 AAS.SeatManager	= {}
 local SeatMan		= AAS.SeatManager

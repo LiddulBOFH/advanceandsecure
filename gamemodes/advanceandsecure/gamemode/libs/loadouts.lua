@@ -1,6 +1,6 @@
 -- Since the default playerclass stuff is so asinine and 90% not documented, I'm just going to make my own system :)
 AddCSLuaFile()
-print("CLASS SYSTEM LOADED")
+MsgN("+ Class system loaded")
 
 NewPlyManager = NewPlyManager or {Classes = {}}
 
