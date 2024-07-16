@@ -3,8 +3,6 @@ MsgN("+ Class system loaded")
 
 NewPlyManager = NewPlyManager or {Classes = {}}
 
-local LP = LocalPlayer()
-
 --[[
 	Decided to move away from actual "classes"
 	Armor is determined by the suit type that the player chooses
@@ -362,6 +360,7 @@ if SERVER then
 		end
 	end
 else
+	local LP = LocalPlayer()
 	local Loadout = {}
 
 	local function LoadoutMenu()
