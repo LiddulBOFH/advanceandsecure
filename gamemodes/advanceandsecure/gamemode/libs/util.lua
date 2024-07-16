@@ -60,7 +60,7 @@ function checkVisible(Point,Team)
 end
 
 function isConnectedTo(PointA,PointB,Lookup,Team)
-	if not Lookup then if CLIENT then net.Start("aas_playerinit") net.SendToServer() end return false end
+	if not Lookup then if CLIENT then net.Start("AAS.PlayerInit") net.SendToServer() end return false end
 	local IndexA = Lookup[PointA]
 	local IndexB = Lookup[PointB]
 
@@ -73,7 +73,7 @@ end
 
 function checkConnection(Point,Line,Lookup,Team)
 	if AAS.NonLinear then return true end
-	if not Line or not Lookup then if CLIENT then net.Start("aas_playerinit") net.SendToServer() end return false end
+	if not Line or not Lookup then if CLIENT then net.Start("AAS.PlayerInit") net.SendToServer() end return false end
 
 	if checkVisible(Point,Team) then return true end
 
@@ -99,7 +99,7 @@ end
 
 function InSafezone(Pos)
 	if not Pos then return true end -- Somehow Pos is nil, so we'll default to true?
-	if not AAS.PointAlias then if CLIENT then net.Start("aas_playerinit") net.SendToServer() end return false end
+	if not AAS.PointAlias then if CLIENT then net.Start("AAS.PlayerInit") net.SendToServer() end return false end
 	local SpawnA = AAS.PointAlias["SpawnA"]:GetPos()
 	local SpawnB = AAS.PointAlias["SpawnB"]:GetPos()
 
@@ -111,7 +111,7 @@ end
 
 function PlyInSafezone(Ply,Pos)
 	if not IsValid(Ply) then return false end
-	if not AAS.PointAlias then if CLIENT then net.Start("aas_playerinit") net.SendToServer() end return false end
+	if not AAS.PointAlias then if CLIENT then net.Start("AAS.PlayerInit") net.SendToServer() end return false end
 	local Team = Ply:Team()
 	local Spawn = AAS.PointAlias[Team == 1 and "SpawnA" or "SpawnB"]
 	local SpawnPos = Vector()
@@ -123,7 +123,7 @@ end
 
 function PlyInEnemySafezone(Ply,Pos)
 	if not IsValid(Ply) then return false end
-	if not AAS.PointAlias then if CLIENT then net.Start("aas_playerinit") net.SendToServer() end return false end
+	if not AAS.PointAlias then if CLIENT then net.Start("AAS.PlayerInit") net.SendToServer() end return false end
 	local Team = Ply:Team()
 	local SpawnPos = Vector()
 	local Spawn = AAS.PointAlias[Team == 2 and "SpawnA" or "SpawnB"]

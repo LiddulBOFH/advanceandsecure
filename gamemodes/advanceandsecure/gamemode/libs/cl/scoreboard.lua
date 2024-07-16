@@ -285,7 +285,7 @@ local function ShowScoreboard()
 		draw.SimpleText("REQUEST SCRIPTS","BasicFontLarge",w / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 	end
 	RequestScript.DoClick = function()
-		net.Start("aas_requestcostscript")
+		net.Start("AAS.RequestCostScript")
 		net.SendToServer()
 	end
 
@@ -305,7 +305,7 @@ local function ShowScoreboard()
 	end
 	RequestDupes.DoClick = function()
 		if AdvDupe2 then
-			net.Start("aas_requestdupes")
+			net.Start("AAS.RequestDupeList")
 			net.SendToServer()
 		else
 			chat.AddText(Color(255,0,0),"AdvDupe2 is not available!")
@@ -327,7 +327,7 @@ local function ShowScoreboard()
 		draw.SimpleText("SWITCH TEAM","BasicFontLarge",w / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 	end
 	SwapTeam.DoClick = function()
-		net.Start("aas_requestteam")
+		net.Start("AAS.RequestTeamSwap")
 		net.SendToServer()
 	end
 end

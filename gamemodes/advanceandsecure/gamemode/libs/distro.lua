@@ -24,7 +24,7 @@ if SERVER then
 		local ReadData = PlyFile.OpenFile:Read(PlyFile.OpenFile:Size())
 		local _,dupe,_,_ = AdvDupe2.Decode(ReadData)
 
-		net.Start("aas_receivedupe")
+		net.Start("AAS.ReceiveDupe")
 			net.WriteString(PlyFile.file)
 		net.Send(ply)
 
@@ -45,7 +45,7 @@ if SERVER then
 			if not IsValid(ply) then return end
 			ply.AdvDupe2.Downloading = true
 
-			net.Start("aas_ReceiveFile")
+			net.Start("AAS.ReceiveFile")
 				net.WriteStream(data, function()
 					ply.AdvDupe2.Downloading = false
 				end)
@@ -57,26 +57,26 @@ if SERVER then
 		do	-- Network
 
 			-- Sends the client the generic cost calculator, which is then further updated using the current cost metrics
-			net.Receive("aas_requestcostscript",function(_,ply)
+			net.Receive("AAS.RequestCostScript",function(_,ply)
 				local Script = file.Read(engine.ActiveGamemode() .. "/distributables/expression2/aas_costcalc.txt","LUA")
 
-				net.Start("aas_createE2")
+				net.Start("AAS.ReceiveCostScript")
 					net.WriteString(Script)
 					net.WriteTable(AAS.RequisitionCosts)
 				net.Send(ply)
 			end)
 
 			-- Sends the client all of the dupes on the server
-			net.Receive("aas_requestdupes",function(_,ply)
+			net.Receive("AAS.RequestDupeList",function(_,ply)
 				if not DupeList then BuildDupeList() end
 
-				net.Start("aas_dupelist")
+				net.Start("AAS.ReceiveDupeList")
 					net.WriteTable(DupeList)
 				net.Send(ply)
 			end)
 
 			-- Sends dupe info to the client when they want to download it
-			net.Receive("aas_choosedupe",function(_,ply)
+			net.Receive("AAS.RequestDupe",function(_,ply)
 				local ChosenDupe = net.ReadString()
 				if not DupeList[ChosenDupe] then aasMsg({Colors.ErrorCol,"Invalid dupe! Try again!"},ply) return end
 
@@ -91,7 +91,7 @@ if SERVER then
 else	-- Client
 
 	concommand.Add("aas_requestcostscript",function()
-		net.Start("aas_requestcostscript")
+		net.Start("AAS.RequestCostScript")
 		net.SendToServer()
 	end)
 
@@ -187,7 +187,7 @@ else	-- Client
 		end
 		DownloadButton.DoClick = function(self)
 			if Allow then
-				net.Start("aas_choosedupe")
+				net.Start("AAS.RequestDupe")
 					net.WriteString(string.StripExtension(Data.txt))
 				net.SendToServer()
 				DupeMenuBase:Remove()
@@ -236,7 +236,7 @@ else	-- Client
 
 	do	-- Net
 		-- Provides a list of all of the dupes available on the server for the player to download one at a time
-		net.Receive("aas_dupelist",function()
+		net.Receive("AAS.ReceiveDupeList",function()
 			Dupes = net.ReadTable()
 			if ScoreboardBase then ScoreboardBase:Remove() end
 			DupeMenu()
@@ -245,13 +245,99 @@ else	-- Client
 		end)
 
 		-- Start of the dupe saving process
-		net.Receive("aas_receivedupe",function()
+		net.Receive("AAS.ReceiveDupe",function()
 			local FileName = net.ReadString()
 
 			AdvDupe2.SavePath = "advdupe2/aas/" .. FileName
 		end)
 
 		-- Actually saving the dupe
-		net.Receive("aas_ReceiveFile", AAS_ReceiveFile)
+		net.Receive("AAS.ReceiveFile", AAS_ReceiveFile)
+
+		-- Handles inserting data into the generic cost calculator E2 script thats sent, populates it with current info about any costs on the server
+		net.Receive("AAS.ReceiveCostScript",function()
+			local E2Code = net.ReadString()
+			local CostInfo = net.ReadTable()
+
+			local CostBreakdown = {}
+
+			for k,v in pairs(CostInfo.CalcSingleFilter) do
+				local Str = "\"" .. k .. "\""
+				if not CostBreakdown.FilterList then
+					CostBreakdown.FilterList = Str
+				else
+					CostBreakdown.FilterList = CostBreakdown.FilterList .. "," .. Str
+				end
+			end
+
+			for k,v in pairs(CostInfo.CalcSingleFilter) do
+				local Str = "\"" .. k .. "\"=" .. v
+				if not CostBreakdown.CalcSingleFilter then
+					CostBreakdown.CalcSingleFilter = Str
+				else
+					CostBreakdown.CalcSingleFilter = CostBreakdown.CalcSingleFilter .. "," .. Str
+				end
+			end
+
+			for k,v in pairs(CostInfo.ACFGunCost) do
+				local Str = "\"" .. k .. "\"=" .. v
+				if not CostBreakdown.ACFGunCost then
+					CostBreakdown.ACFGunCost = Str
+				else
+					CostBreakdown.ACFGunCost = CostBreakdown.ACFGunCost .. "," .. Str
+				end
+			end
+
+			for k,v in pairs(CostInfo.ACFAmmoModifier) do
+				local Str = "\"" .. k .. "\"=" .. v
+				if not CostBreakdown.ACFAmmoModifier then
+					CostBreakdown.ACFAmmoModifier = Str
+				else
+					CostBreakdown.ACFAmmoModifier = CostBreakdown.ACFAmmoModifier .. "," .. Str
+				end
+			end
+
+			for k,v in pairs(CostInfo.ACFMissileModifier) do
+				local Str = "\"" .. k .. "\"=" .. v
+				if not CostBreakdown.ACFMissileModifier then
+					CostBreakdown.ACFMissileModifier = Str
+				else
+					CostBreakdown.ACFMissileModifier = CostBreakdown.ACFMissileModifier .. "," .. Str
+				end
+			end
+
+			for k,v in pairs(CostInfo.SpecialModelFilter) do
+				local Str = "\"" .. k .. "\"=" .. v
+				if not CostBreakdown.SpecialModelFilter then
+					CostBreakdown.SpecialModelFilter = Str
+				else
+					CostBreakdown.SpecialModelFilter = CostBreakdown.SpecialModelFilter .. "," .. Str
+				end
+			end
+
+			for k,v in pairs(CostInfo.ACFRadars) do
+				local Str = "\"" .. k .. "\"=" .. v
+				if not CostBreakdown.ACFRadars then
+					CostBreakdown.ACFRadars = Str
+				else
+					CostBreakdown.ACFRadars = CostBreakdown.ACFRadars .. "," .. Str
+				end
+			end
+
+			local FinalCode = string.format(E2Code,
+				util.DateStamp(),
+				CostBreakdown.FilterList,
+				CostBreakdown.CalcSingleFilter,
+				CostBreakdown.ACFGunCost,
+				CostBreakdown.ACFAmmoModifier,
+				CostBreakdown.ACFMissileModifier,
+				CostBreakdown.SpecialModelFilter,
+				CostBreakdown.ACFRadars)
+
+			if not file.Exists("expression2/AAS","DATA") then file.CreateDir("expression2/AAS") end
+			file.Write("expression2/AAS/aas_costcalc.txt",FinalCode)
+
+			chat.AddText(Color(200,200,200),"AAS Cost script has been saved to >expression2/AAS/aas_costcalc.txt!")
+		end)
 	end
 end

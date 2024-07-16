@@ -65,7 +65,7 @@ if SERVER then
 		PrintTable(Choices)
 		]]--
 
-		net.Start("aas_openvotes")
+		net.Start("AAS.OpenVotes")
 			net.WriteFloat(ST() + CheckTime)
 			net.WriteBool(AAS.RTV)
 			net.WriteTable(Choices)
@@ -125,7 +125,7 @@ if SERVER then
 		do	-- Network
 
 			-- Receives vote info and updates clients about that, otherwise will send a rude message to anyone thats trying to circumvent it
-			net.Receive("aas_receivevote",function(_,ply)
+			net.Receive("AAS.ReceiveVote",function(_,ply)
 				if not AAS.Voting then aasMsg({Colors.ErrorCol,"Bugger off"},ply) return end
 				local Choice = net.ReadUInt(3)
 
@@ -142,7 +142,7 @@ else	-- Cient
 	local Time = SysTime() + 0
 
 	local function SendVote(choice)
-		net.Start("aas_receivevote")
+		net.Start("AAS.ReceiveVote")
 			net.WriteUInt(choice,3)
 		net.SendToServer()
 	end
@@ -268,96 +268,10 @@ else	-- Cient
 	end
 
 	-- Opens the vote menu, with a timer as well as if "rock the vote" can occur
-	net.Receive("aas_openvotes",function()
+	net.Receive("AAS.OpenVotes",function()
 		Time = net.ReadFloat()
 		RTV = net.ReadBool()
 		Choices = net.ReadTable()
 		VoteMenu()
-	end)
-
-	-- Handles inserting data into the generic cost calculator E2 script thats sent, populates it with current info about any costs on the server
-	net.Receive("aas_createE2",function()
-		local E2Code = net.ReadString()
-		local CostInfo = net.ReadTable()
-
-		local CostBreakdown = {}
-
-		for k,v in pairs(CostInfo.CalcSingleFilter) do
-			local Str = "\"" .. k .. "\""
-			if not CostBreakdown.FilterList then
-				CostBreakdown.FilterList = Str
-			else
-				CostBreakdown.FilterList = CostBreakdown.FilterList .. "," .. Str
-			end
-		end
-
-		for k,v in pairs(CostInfo.CalcSingleFilter) do
-			local Str = "\"" .. k .. "\"=" .. v
-			if not CostBreakdown.CalcSingleFilter then
-				CostBreakdown.CalcSingleFilter = Str
-			else
-				CostBreakdown.CalcSingleFilter = CostBreakdown.CalcSingleFilter .. "," .. Str
-			end
-		end
-
-		for k,v in pairs(CostInfo.ACFGunCost) do
-			local Str = "\"" .. k .. "\"=" .. v
-			if not CostBreakdown.ACFGunCost then
-				CostBreakdown.ACFGunCost = Str
-			else
-				CostBreakdown.ACFGunCost = CostBreakdown.ACFGunCost .. "," .. Str
-			end
-		end
-
-		for k,v in pairs(CostInfo.ACFAmmoModifier) do
-			local Str = "\"" .. k .. "\"=" .. v
-			if not CostBreakdown.ACFAmmoModifier then
-				CostBreakdown.ACFAmmoModifier = Str
-			else
-				CostBreakdown.ACFAmmoModifier = CostBreakdown.ACFAmmoModifier .. "," .. Str
-			end
-		end
-
-		for k,v in pairs(CostInfo.ACFMissileModifier) do
-			local Str = "\"" .. k .. "\"=" .. v
-			if not CostBreakdown.ACFMissileModifier then
-				CostBreakdown.ACFMissileModifier = Str
-			else
-				CostBreakdown.ACFMissileModifier = CostBreakdown.ACFMissileModifier .. "," .. Str
-			end
-		end
-
-		for k,v in pairs(CostInfo.SpecialModelFilter) do
-			local Str = "\"" .. k .. "\"=" .. v
-			if not CostBreakdown.SpecialModelFilter then
-				CostBreakdown.SpecialModelFilter = Str
-			else
-				CostBreakdown.SpecialModelFilter = CostBreakdown.SpecialModelFilter .. "," .. Str
-			end
-		end
-
-		for k,v in pairs(CostInfo.ACFRadars) do
-			local Str = "\"" .. k .. "\"=" .. v
-			if not CostBreakdown.ACFRadars then
-				CostBreakdown.ACFRadars = Str
-			else
-				CostBreakdown.ACFRadars = CostBreakdown.ACFRadars .. "," .. Str
-			end
-		end
-
-		local FinalCode = string.format(E2Code,
-			util.DateStamp(),
-			CostBreakdown.FilterList,
-			CostBreakdown.CalcSingleFilter,
-			CostBreakdown.ACFGunCost,
-			CostBreakdown.ACFAmmoModifier,
-			CostBreakdown.ACFMissileModifier,
-			CostBreakdown.SpecialModelFilter,
-			CostBreakdown.ACFRadars)
-
-		if not file.Exists("expression2/AAS","DATA") then file.CreateDir("expression2/AAS") end
-		file.Write("expression2/AAS/aas_costcalc.txt",FinalCode)
-
-		chat.AddText(Color(200,200,200),"AAS Cost script has been saved to >expression2/AAS/aas_costcalc.txt!")
 	end)
 end

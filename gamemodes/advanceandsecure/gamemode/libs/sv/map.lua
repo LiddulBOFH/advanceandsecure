@@ -25,7 +25,7 @@ AAS.Funcs.SetEditMode = aas_SetEditMode
 local function sendRAAS(ply) -- pass nil to broadcast
 	if not AAS.RAASFinished then return end
 
-	net.Start("aas_raasline")
+	net.Start("AAS.RAASLine")
 		net.WriteTable(AAS.RAASLine)
 		net.WriteTable(AAS.PointAlias)
 	if ply == nil then
@@ -39,7 +39,7 @@ end
 AAS.Funcs.sendRAAS = sendRAAS
 
 local function aas_UpdateTeamData(ply)
-	net.Start("aas_UpdateTeamData")
+	net.Start("AAS.UpdateTeamData")
 		net.WriteTable(AAS.TeamData)
 	if ply == nil then net.Broadcast() else net.Send(ply) end
 end

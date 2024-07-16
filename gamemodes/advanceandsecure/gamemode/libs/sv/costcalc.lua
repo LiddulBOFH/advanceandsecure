@@ -344,7 +344,7 @@ do
 			local Ply = Dupe[1].Player
 			local Cost,Breakdown,DupeCenter,Highest = CalcSingleRequisition(DupeEnts)
 
-			net.Start("aas_notifycost")
+			net.Start("AAS.CostPanel")
 				net.WriteVector(DupeCenter)
 				net.WriteTable(Breakdown)
 				net.WriteUInt(Cost,16)

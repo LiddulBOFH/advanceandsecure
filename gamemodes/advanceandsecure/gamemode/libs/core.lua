@@ -48,48 +48,55 @@ Colors = {
 
 if SERVER then
 	do	-- Network strings
-		-- Serverside
-		util.AddNetworkString("aas_msg")
-		util.AddNetworkString("aas_raasline")
-		util.AddNetworkString("aas_send_updateproperties")
-		util.AddNetworkString("aas_pointstatechange")
-		util.AddNetworkString("aas_UpdateTeamData")
-		util.AddNetworkString("aas_opensettings")
-		util.AddNetworkString("aas_openloadout")
-		util.AddNetworkString("aas_openvotes")
+		-- Serverside -> Client
+		util.AddNetworkString("AAS.Message")
+		util.AddNetworkString("AAS.RAASLine")
+		util.AddNetworkString("AAS.UpdatePointState")
+		util.AddNetworkString("AAS.UpdateTeamData")
+		util.AddNetworkString("AAS.OpenSettings")
+		util.AddNetworkString("AAS.OpenLoadout")
+		util.AddNetworkString("AAS.OpenVotes")
 
-		util.AddNetworkString("aas_requestcostscript")
+		util.AddNetworkString("AAS.RequestCostScript")
 
-		util.AddNetworkString("aas_requestdupes")
-		util.AddNetworkString("aas_choosedupe")
+		util.AddNetworkString("AAS.RequestDupeList")
+		util.AddNetworkString("AAS.RequestDupe")
 
-		-- Clientside
-		util.AddNetworkString("aas_requestteam")
-		util.AddNetworkString("aas_playerinit")
-		util.AddNetworkString("aas_edit_updateproperties")
-		util.AddNetworkString("aas_UpdateServerSettings")
-		util.AddNetworkString("aas_receiveplayerloadout")
-		util.AddNetworkString("aas_receivevote")
+		-- Clientside -> Server
+		util.AddNetworkString("AAS.RequestTeamSwap")
+		util.AddNetworkString("AAS.PlayerInit")
+		util.AddNetworkString("AAS.UpdateServerSettings")
+		util.AddNetworkString("AAS.ReceivePlayerLoadout")
+		util.AddNetworkString("AAS.ReceiveVote")
 
-		util.AddNetworkString("aas_createE2")
-		util.AddNetworkString("aas_notifycost")
+		util.AddNetworkString("AAS.ReceiveCostScript")
+		util.AddNetworkString("AAS.CostPanel")
 
-		util.AddNetworkString("aas_dupelist")
-		util.AddNetworkString("aas_receivedupe")
-		util.AddNetworkString("aas_ReceiveFile")
+		util.AddNetworkString("AAS.ReceiveDupeList")
+		util.AddNetworkString("AAS.ReceiveDupe")
+		util.AddNetworkString("AAS.ReceiveFile")
 	end
 
 	function aasMsg(msg,ply)
-		net.Start("aas_msg")
+		net.Start("AAS.Message")
 			net.WriteTable(msg)
 		if ply == nil then net.Broadcast() else net.Send(ply) end
 	end
 
 	function aas_PointStateChange(point,oldstatus,newstatus)
-		net.Start("aas_pointstatechange")
+		net.Start("AAS.UpdatePointState")
 			net.WriteEntity(point)
 			net.WriteInt(oldstatus,3)
 			net.WriteInt(newstatus,3)
 		net.Broadcast()
+	end
+else
+	do	-- Network
+
+		-- Generic message handler
+		net.Receive("AAS.Message",function()
+			local msg = net.ReadTable()
+			chat.AddText(unpack(msg))
+		end)
 	end
 end

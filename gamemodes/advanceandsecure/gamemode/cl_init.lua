@@ -34,7 +34,7 @@ local function setupRAASLocal()
 		AAS.RAASLookup[v] = k
 		if not IsValid(v) then
 			if not AAS.RAASQueued then
-				net.Start("aas_playerinit")
+				net.Start("AAS.PlayerInit")
 				net.SendToServer()
 			end
 
@@ -87,7 +87,7 @@ local function PointChange(Point,OldStatus,NewStatus)
 	PointChangeBase:CenterVertical(0.25)
 	PointChangeBase:AlphaTo(0,1,4,function(_,panel) panel:Remove() end)
 	PointChangeBase.Paint = function(self,w,h)
-		if not AAS.TeamData then net.Start("aas_playerinit") net.SendToServer() PointChangeBase:Remove() end -- somehow we lost vital data??
+		if not AAS.TeamData then net.Start("AAS.PlayerInit") net.SendToServer() PointChangeBase:Remove() end -- somehow we lost vital data??
 		local CappingTeam = CapStatus(Point)
 		local CurrentTeam = LP:Team()
 		draw.NoTexture()
@@ -106,7 +106,7 @@ local function PointChange(Point,OldStatus,NewStatus)
 		else
 			PolyCol = Col
 			CapCol = (NewStatus == CurrentTeam and Colors.GoodCol or Colors.BadCol)
-			CapText = "Captured by " .. AAS.TeamData[CappingTeam].Name
+			CapText = "Captured by " .. (AAS.TeamData[CappingTeam].Name or "")
 		end
 
 		local CX,CY = w / 2,h / 2
@@ -370,7 +370,7 @@ local function SettingsMenu()
 
 	FinishButton.DoClick = function()
 		--PrintTable(Settings)
-		net.Start("aas_UpdateServerSettings")
+		net.Start("AAS.UpdateServerSettings")
 			net.WriteTable(Settings)
 		net.SendToServer()
 
@@ -379,7 +379,7 @@ local function SettingsMenu()
 end
 if SettingsBase then SettingsBase:Remove() end
 
-net.Receive("aas_opensettings",function()
+net.Receive("AAS.OpenSettings",function()
 	SVProperties = net.ReadTable()
 	SettingsMenu()
 end)
@@ -388,12 +388,12 @@ do  -- Stuff to organize
 
 	do	-- Net
 		-- Handles any changes in point capture status
-		net.Receive("aas_pointstatechange",function()
+		net.Receive("AAS.UpdatePointState",function()
 			PointChange(net.ReadEntity(),net.ReadInt(3),net.ReadInt(3))
 		end)
 
 		-- Sets up the line of points for the player, with it arranged for their team
-		net.Receive("aas_raasline",function()
+		net.Receive("AAS.RAASLine",function()
 			AAS.ServerRAAS = net.ReadTable()
 			AAS.PointAlias = net.ReadTable()
 			AAS.RAASLookup = {}
@@ -407,14 +407,8 @@ do  -- Stuff to organize
 			setupRAASLocal()
 		end)
 
-		-- Generic message handler
-		net.Receive("aas_msg",function()
-			local msg = net.ReadTable()
-			chat.AddText(unpack(msg))
-		end)
-
 		-- Sets up the team aliases as well as colors for the client, also sets the player color
-		net.Receive("aas_UpdateTeamData",function()
+		net.Receive("AAS.UpdateTeamData",function()
 			AAS.TeamData = net.ReadTable()
 
 			if LP:GetPlayerColor() ~= AAS.TeamData[LP:Team()].Color then
@@ -429,7 +423,7 @@ do  -- Stuff to organize
 		end)
 
 		-- Sent whenever the player spawns a dupe, provides information about the cost of everything in the dupe
-		net.Receive("aas_notifycost",function()
+		net.Receive("AAS.CostPanel",function()
 			local DupeCenter = net.ReadVector()
 			local CostBreakdown = net.ReadTable()
 			local Cost = net.ReadUInt(16)
@@ -454,7 +448,7 @@ do  -- Stuff to organize
 			timer.Simple(5,function() AAS.RAASQueued = false end)
 			AAS.RAASQueued = true
 
-			net.Start("aas_playerinit")
+			net.Start("AAS.PlayerInit")
 			net.SendToServer()
 		end
 
@@ -511,7 +505,7 @@ do  -- Stuff to organize
 						"BasicFontLarge",SW / 2, (SH / 2) + UU * 0.5,Colors.BadCol,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 					end
 
-					draw.DrawText(AAS.Func.getHint(),"BasicFontLarge",SW / 2, SH * 0.75,Colors.BasicCol,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+					draw.DrawText(AAS.Funcs.getHint(),"BasicFontLarge",SW / 2, SH * 0.75,Colors.BasicCol,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 
 					return
 				end

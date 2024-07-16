@@ -3,6 +3,8 @@ MsgN("+ Class system loaded")
 
 NewPlyManager = NewPlyManager or {Classes = {}}
 
+local LP = LocalPlayer()
+
 --[[
 	Decided to move away from actual "classes"
 	Armor is determined by the suit type that the player chooses
@@ -246,12 +248,12 @@ if SERVER then
 
 	function NewPlyManager.OpenLoadout(ply)
 		if not ply.PlayerLoadout then ply.PlayerLoadout = table.Copy(NewPlyManager.DefaultLoadout) end
-		net.Start("aas_openloadout")
+		net.Start("AAS.OpenLoadout")
 			net.WriteTable(ply.PlayerLoadout)
 		net.Send(ply)
 	end
 
-	net.Receive("aas_receiveplayerloadout",function(_,ply)
+	net.Receive("AAS.ReceivePlayerLoadout",function(_,ply)
 		local Loadout = net.ReadTable()
 
 		Loadout.Armor = math.Clamp(math.Round(Loadout.Armor),0,100)
@@ -622,7 +624,7 @@ else
 			draw.SimpleText("APPLY","BasicFontLarge",w / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 		end
 		ApplyLoadout.DoClick = function(self)
-			net.Start("aas_receiveplayerloadout")
+			net.Start("AAS.ReceivePlayerLoadout")
 				net.WriteTable(Loadout)
 			net.SendToServer()
 
@@ -761,7 +763,7 @@ else
 	if LoadoutBase then LoadoutBase:Remove() end
 
 	-- Opens the loadout menu, and provides the player's current loadout
-	net.Receive("aas_openloadout",function()
+	net.Receive("AAS.OpenLoadout",function()
 		Loadout = net.ReadTable()
 		LoadoutMenu()
 	end)

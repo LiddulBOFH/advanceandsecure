@@ -447,7 +447,7 @@ do	-- Organizing stuff :)
 
 	do	-- Net handling
 		-- Sends the gamemode info to the client
-		net.Receive("aas_playerinit",function(_,ply)
+		net.Receive("AAS.PlayerInit",function(_,ply)
 			if not AAS.RAASLine then
 				print("No RAASLine defined to send to " .. tostring(ply) .. "!")
 
@@ -467,7 +467,7 @@ do	-- Organizing stuff :)
 		end)
 
 		-- Handles when a player wishes to change teams legitimately, and will block them if they aren't allowed (team misbalance, changing too often)
-		net.Receive("aas_requestteam",function(_,ply)
+		net.Receive("AAS.RequestTeamSwap",function(_,ply)
 			if ply.NextTeamSwitch and (ply.NextTeamSwitch >= ST()) then
 				aasMsg({Colors.ErrorCol,"You can't switch teams for another " .. math.Round(ply.NextTeamSwitch - ST(),1) .. " seconds!"},ply)
 				return
@@ -490,7 +490,7 @@ do	-- Organizing stuff :)
 		end)
 
 		-- Handles any updates to the server settings, with a myriad of checks to block any unwanted changes
-		net.Receive("aas_UpdateServerSettings",function(_,ply)
+		net.Receive("AAS.UpdateServerSettings",function(_,ply)
 			local Settings = net.ReadTable()
 			if ply == nil then print("how?") return end
 			if not ply:IsSuperAdmin() then print(ply:Nick() .. " attempted to update server settings.") return end
@@ -536,7 +536,7 @@ do	-- Organizing stuff :)
 			AAS.Funcs.updateTeamData(ply)
 
 			timer.Simple(0,function()
-				net.Start("aas_opensettings")
+				net.Start("AAS.OpenSettings")
 				net.WriteTable(AAS.CurrentProperties)
 				net.Send(ply)
 			end)
