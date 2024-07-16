@@ -1,5 +1,4 @@
 -- Provides team-based seating systems
-AddCSLuaFile()
 MsgN("+ Seat system loaded")
 
 AAS.SeatManager	= {}
@@ -239,6 +238,40 @@ else
 		if SeatMan.SeatOwnedBy[Seat]:Team() ~= Ply:Team() then
 			Ply:ExitVehicle()
 		end
+	end)
+
+	-- Replaces the player's default gmod loadout with whatever they want, if they can afford it, otherwise load the server default loadout
+	hook.Add("PlayerLoadout","OverrideLoadout",function(ply)
+		ply:ApplyLoadout()
+
+		--ply:SetModel(ModelList[math.random(1,#ModelList)] or "models/Humans/Group03/male_02.mdl")
+		ply:SetPlayerColor(AAS.TeamData[ply:Team()].Color:ToVector())
+
+		if GetGlobalBool("EditMode",false) == true then -- give basic tooling to aid in map creation
+			ply:Give("weapon_physgun")
+			ply:Give("gmod_tool")
+		end
+
+		if ply:GetNW2Int("KnownRound",0) ~= AAS.RoundCounter then
+			local msg = {Colors.BasicCol,"We're on round " .. AAS.RoundCounter .. "! "}
+
+			local TeamAWins = AAS.TeamWins[1]
+			local TeamBWins = AAS.TeamWins[2]
+
+			if TeamAWins > 0 and TeamBWins == 0 then
+				table.Add(msg,{AAS.TeamData[1].Color,AAS.TeamData[1].Name,Colors.BasicCol," just needs to win again!"})
+			elseif TeamBWins > 0 and TeamAWins == 0 then
+				table.Add(msg,{AAS.TeamData[2].Color,AAS.TeamData[2].Name,Colors.BasicCol," just needs to win again!"})
+			elseif TeamAWins > 0 and TeamBWins > 0 then
+				table.Add(msg,{"This should be a tie-breaker!"})
+			end
+
+			aasMsg(msg,ply)
+
+			ply:SetNW2Int("KnownRound",AAS.RoundCounter)
+		end
+
+		return true
 	end)
 end
 
