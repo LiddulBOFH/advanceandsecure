@@ -9,12 +9,6 @@ local function localizeToPanel(Vec3,Panel)
 	return {x = ((Vec3.x / 16384) * (Panel:GetWide() / 2)) + (Panel:GetWide() / 2), y = ((-Vec3.y / 16384) * (Panel:GetTall() / 2)) + (Panel:GetTall() / 2)}
 end
 
-local function CapColor(Cap)
-	if Cap > 0 then return mixColor(AAS.TeamData[1].Color,PointBaseColor,Cap / 100)
-	elseif Cap < 0 then return mixColor(AAS.TeamData[2].Color,PointBaseColor,-Cap / 100)
-	else return PointBaseColor end
-end
-
 local function ShowScoreboard()
 	local LP = LocalPlayer()
 	local BluTD = AAS.TeamData[1]

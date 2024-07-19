@@ -1,11 +1,5 @@
 include("shared.lua")
 
-local function mixColor(ColorA,ColorB,Mix)
-    local CA = ColorA:ToVector()
-    local CB = ColorB:ToVector()
-    return (CB * (1 - Mix) + CA * Mix):ToColor()
-end
-
 local BaseColor         = Color(65,65,65)
 local SegLength         = 16
 local RenderDistance    = 1536 ^ 2

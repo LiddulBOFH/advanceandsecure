@@ -41,26 +41,10 @@ local function setupRAASLocal()
 	AAS.RAASFinished = true
 end
 
-local function mixColor(ColorA,ColorB,Mix)
-	local CA = ColorA:ToVector()
-	local CB = ColorB:ToVector()
-	return (CB * (1 - Mix) + CA * Mix):ToColor()
-end
-
-function GM:NotifyShouldTransmit(ent,should)
-	if ent:GetClass() == "aas_point" then ent:SetPredictable(true) end
-end
-
 -- Render mess and things
 
 -- This is for fixing sync issues regarding teams and setting up the RAASLine for the player's perspective
 local StoredTeam = 0
-
-local function CapColor(Cap)
-	if Cap > 0 then return mixColor(AAS.TeamData[1].Color,PointBaseColor,Cap / 100)
-	elseif Cap < 0 then return mixColor(AAS.TeamData[2].Color,PointBaseColor,-Cap / 100)
-	else return PointBaseColor end
-end
 
 local ATeamHalf = {}
 ATeamHalf[1] = {x = SM.x, y = 0}

@@ -3,6 +3,26 @@ MsgN("+ Util loaded")
 if CLIENT then
 	AAS.RAASQueued = false
 
+	function GM:NotifyShouldTransmit(ent,should)
+		if ent:GetClass() == "aas_point" then ent:SetPredictable(true) end
+	end
+
+	local PointBaseColor = Color(65,65,65)
+
+	function mixColor(ColorA,ColorB,Mix)
+		if Mix <= 0 then return ColorB elseif Mix >= 1 then return ColorA end
+
+		local CA = ColorA:ToVector()
+		local CB = ColorB:ToVector()
+		return (CB * (1 - Mix) + CA * Mix):ToColor()
+	end
+
+	function CapColor(Cap)
+		if Cap > 0 then return mixColor(AAS.TeamData[1].Color,PointBaseColor,Cap / 100)
+		elseif Cap < 0 then return mixColor(AAS.TeamData[2].Color,PointBaseColor,-Cap / 100)
+		else return PointBaseColor end
+	end
+
 	local function InitPlayer()
 		if AAS.RAASQueued then return end
 
