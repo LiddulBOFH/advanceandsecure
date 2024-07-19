@@ -446,10 +446,10 @@ do  -- Stuff to organize
 		-- Requests information about the running game, like the points and how they are connected
 
 		hook.Add("InitPostEntity","PlyInit",function()
-			requestInfo()
+			AAS.Funcs.InitPlayer()
 		end)
 
-		requestInfo()
+		AAS.Funcs.InitPlayer()
 
 		-- A slow tick that just checks if for some reason the client lost the info, which has happened for reasons unknown as of writing
 		local ClientThinkDelay = 0
@@ -462,7 +462,8 @@ do  -- Stuff to organize
 			local Team = LP:Team()
 
 			if not AAS.TeamData then
-				requestInfo()
+				AAS.Funcs.InitPlayer()
+				return
 			end
 
 			if Team ~= StoredTeam then
