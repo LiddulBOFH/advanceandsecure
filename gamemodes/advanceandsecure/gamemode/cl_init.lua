@@ -371,7 +371,6 @@ local function SettingsMenu()
 	end
 
 	FinishButton.DoClick = function()
-		--PrintTable(Settings)
 		net.Start("AAS.UpdateServerSettings")
 			net.WriteTable(Settings)
 		net.SendToServer()

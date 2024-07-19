@@ -42,6 +42,6 @@ function ENT:SetupDataTables()
     if CLIENT then
         self.InterpCapture = 0
 
-        self:NetworkVarNotify("ForceUpdate",function(ent,_,old,new) print(ent,"name",old,new) end)
+        self:NetworkVarNotify("ForceUpdate",function(ent,_,old,new) end)
     end
 end

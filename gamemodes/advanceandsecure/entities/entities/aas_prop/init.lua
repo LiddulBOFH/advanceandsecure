@@ -21,7 +21,7 @@ function ENT:SetEditable(Bool)
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetCollisionGroup(COLLISION_GROUP_NONE)
 
-	local physobj = self.Entity:GetPhysicsObject()
+	local physobj = self:GetPhysicsObject()
 
 	if IsValid(physobj) then
 		physobj:SetMass(50000) -- Mass helps with physics, and these props are supposed to be static
