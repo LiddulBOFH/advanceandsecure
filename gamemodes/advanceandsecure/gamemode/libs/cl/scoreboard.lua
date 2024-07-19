@@ -2,6 +2,9 @@ MsgN("+ Scoreboard loaded")
 
 local PlyColor = Color(0,127,0)
 
+local SW,SH = ScrW(),ScrH()
+local UU = ((SW > SH) and SH or SW) / 12
+
 local function localizeToPanel(Vec3,Panel)
 	return {x = ((Vec3.x / 16384) * (Panel:GetWide() / 2)) + (Panel:GetWide() / 2), y = ((-Vec3.y / 16384) * (Panel:GetTall() / 2)) + (Panel:GetTall() / 2)}
 end

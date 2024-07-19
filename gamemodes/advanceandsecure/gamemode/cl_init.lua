@@ -33,10 +33,7 @@ local function setupRAASLocal()
 	for k,v in ipairs(AAS.RAASLine) do
 		AAS.RAASLookup[v] = k
 		if not IsValid(v) then
-			if not AAS.RAASQueued then
-				net.Start("AAS.PlayerInit")
-				net.SendToServer()
-			end
+			AAS.Funcs.InitPlayer()
 
 			return
 		end
@@ -87,7 +84,12 @@ local function PointChange(Point,OldStatus,NewStatus)
 	PointChangeBase:CenterVertical(0.25)
 	PointChangeBase:AlphaTo(0,1,4,function(_,panel) panel:Remove() end)
 	PointChangeBase.Paint = function(self,w,h)
-		if not AAS.TeamData then net.Start("AAS.PlayerInit") net.SendToServer() PointChangeBase:Remove() end -- somehow we lost vital data??
+		if not AAS.TeamData then
+			AAS.Funcs.InitPlayer()
+
+			return
+		end -- somehow we lost vital data??
+
 		local CappingTeam = CapStatus(Point)
 		local CurrentTeam = LP:Team()
 		draw.NoTexture()
@@ -441,16 +443,6 @@ do  -- Stuff to organize
 
 	do	-- Hooks
 		-- Requests information about the running game, like the points and how they are connected
-
-		local function requestInfo()
-			if AAS.RAASQueued then return end
-
-			timer.Simple(5,function() AAS.RAASQueued = false end)
-			AAS.RAASQueued = true
-
-			net.Start("AAS.PlayerInit")
-			net.SendToServer()
-		end
 
 		hook.Add("InitPostEntity","PlyInit",function()
 			requestInfo()

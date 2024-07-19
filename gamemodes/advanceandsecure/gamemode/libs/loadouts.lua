@@ -360,10 +360,10 @@ if SERVER then
 		end
 	end
 else
-	local LP = LocalPlayer()
 	local Loadout = {}
 
 	local function LoadoutMenu()
+		local LP = LocalPlayer()
 		if LoadoutBase then LoadoutBase:Remove() end
 		if not PlyInSafezone(LP,LP:GetPos()) then return end -- Somehow they set this off, we're gonna prevent it if we can
 
