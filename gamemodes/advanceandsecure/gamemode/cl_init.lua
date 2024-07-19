@@ -1,5 +1,4 @@
 include("shared.lua")
-local LP = LocalPlayer()
 
 AAS.ServerRAAS		= nil
 AAS.RAASLine		= nil
@@ -26,7 +25,7 @@ local function setupRAASLocal()
 
 	if VotePanel then VotePanel:Remove() end
 
-	if LP:Team() == 2 then
+	if LocalPlayer():Team() == 2 then
 		AAS.RAASLine = table.Reverse(AAS.RAASLine)
 	end
 
@@ -91,7 +90,7 @@ local function PointChange(Point,OldStatus,NewStatus)
 		end -- somehow we lost vital data??
 
 		local CappingTeam = CapStatus(Point)
-		local CurrentTeam = LP:Team()
+		local CurrentTeam = LocalPlayer():Team()
 		draw.NoTexture()
 		local Col = PointBaseColor
 		if AAS.TeamData[CappingTeam] then Col = AAS.TeamData[CappingTeam].Color end
@@ -145,6 +144,7 @@ end
 local SVProperties = {}
 
 local function SettingsMenu()
+	local LP = LocalPlayer()
 	if GetGlobalBool("EditMode",false) == false then LP:PrintMessage(HUD_PRINTTALK,"The server is not in edit mode!") return end
 
 	local Settings = table.Copy(SVProperties)
@@ -412,6 +412,7 @@ do  -- Stuff to organize
 		-- Sets up the team aliases as well as colors for the client, also sets the player color
 		net.Receive("AAS.UpdateTeamData",function()
 			AAS.TeamData = net.ReadTable()
+			local LP = LocalPlayer()
 
 			if LP:GetPlayerColor() ~= AAS.TeamData[LP:Team()].Color then
 				LP:SetPlayerColor(AAS.TeamData[LP:Team()].Color:ToVector())
@@ -454,7 +455,10 @@ do  -- Stuff to organize
 		local ClientThinkDelay = 0
 		hook.Add("Think","PlyThink",function()
 			if SysTime() <= ClientThinkDelay then return end
-			if not IsValid(LP) then LP = LocalPlayer() return end
+
+			local LP = LocalPlayer()
+			if not IsValid(LP) then return end
+
 			local Team = LP:Team()
 
 			if not AAS.TeamData then
@@ -474,9 +478,12 @@ do  -- Stuff to organize
 		-- Blanks out the screen when the player is dead, or fades it with red when below 25% health
 		-- While dead the player can see a time until they can respawn, a hint for the gamemode, and a warning if their karma is too low (extends respawn time)
 		hook.Add("PostDrawHUD","PostGameHUD",function()
-			draw.NoTexture()
-			if not IsValid(LP) then LP = LocalPlayer() return end
+			local LP = LocalPlayer()
+			if not IsValid(LP) then return end
+
 			local Health = LP:Health()
+			draw.NoTexture()
+
 			if Health < 25 then
 				surface.SetDrawColor(255 * (Health / 25),0,0,255 * (1 - (Health / 25)))
 				surface.DrawRect(0,0,SW,SH)
@@ -513,8 +520,8 @@ do  -- Stuff to organize
 		local FriendlyScale = 10
 		local PointScale = 20
 		hook.Add("HUDPaint","GameHUD",function()
-			draw.NoTexture()
-			if not IsValid(LP) then LP = LocalPlayer() return end
+			local LP = LocalPlayer()
+			if not IsValid(LP) then return end
 			if not LP:Alive() then return end
 
 			local Team = LP:Team()
@@ -652,6 +659,8 @@ do  -- Stuff to organize
 		-- When if EditMode, will draw boxes around all spawnpoints
 		local ColorWheel = 0
 		hook.Add("PostDrawOpaqueRenderables","EditMode3D",function(depth,skybox,skybox3D)
+			local LP = LocalPlayer()
+
 			if AAS.RAASFinished then
 				if not IsValid(AAS.RAASLine[1]) then AAS.RAASFinished = false return end
 				local CanIgnoreDraw = GetGlobalBool("EditMode")

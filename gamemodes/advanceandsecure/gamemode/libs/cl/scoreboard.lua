@@ -10,6 +10,7 @@ local function localizeToPanel(Vec3,Panel)
 end
 
 local function ShowScoreboard()
+	local LP = LocalPlayer()
 	local BluTD = AAS.TeamData[1]
 	local BluCol = {r = BluTD.Color.r,g = BluTD.Color.g,b = BluTD.Color.b}
 
