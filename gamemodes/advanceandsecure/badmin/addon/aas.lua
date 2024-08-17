@@ -34,7 +34,7 @@ function callfunc(ply,args) -- Save
 end
 
 cmdSettings = {
-	["Help"] = "Saves the map in it]s current state.",
+	["Help"] = "Saves the map in the current state.",
 	["MinimumPrivilege"] = 2,
 	["RCONCanUse"] = true
 }

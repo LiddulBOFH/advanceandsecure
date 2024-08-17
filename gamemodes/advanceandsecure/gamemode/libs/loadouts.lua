@@ -9,6 +9,8 @@ NewPlyManager = NewPlyManager or {Classes = {}}
 
 	Movespeed is affected by WU, or Weight Units
 	Armor as well as weapon choice dictates how much WU the player has
+
+	TODO: Allow players to save loadouts
 ]]--
 
 NewPlyManager.Weapons = { -- If it ain't here, you can't have it
@@ -139,7 +141,7 @@ if SERVER then
 		if IsValid(curwep) and (not Free) and curwep:GetPrimaryAmmoType() ~= -1 and curwepAmmoDiff > 0 then -- give ammo to max out this weapon only
 			local cost = math.ceil(AmmoCost(curwepAmmoDiff,curwep.Primary.Ammo))
 
-			local Pass = ChargeRequisition(Ply,cost,"Refilling (" .. curwep.PrintName .. ") ammo")
+			local Pass = AAS.Funcs.ChargeRequisition(Ply,cost,"Refilling (" .. curwep.PrintName .. ") ammo")
 			if Pass then
 				if not Quiet then aasMsg({Colors.BasicCol,"(" .. curwep.PrintName .. ") has been refilled. Press E again to refill everything!"},Ply) end
 				Ply:GiveAmmo(curwepAmmoDiff,curwep.Primary.Ammo)
@@ -167,7 +169,7 @@ if SERVER then
 			cost = math.ceil(cost)
 
 			if cost ~= 0 then
-				local Pass = ChargeRequisition(Ply,cost,"Refilling all ammo")
+				local Pass = AAS.Funcs.ChargeRequisition(Ply,cost,"Refilling all ammo")
 				if Pass then
 					if not Quiet then aasMsg({Colors.BasicCol,"All of your ammo has been refilled."},Ply) end
 					for k,v in pairs(maxlist) do
@@ -303,7 +305,7 @@ if SERVER then
 
 		local LoadoutData = NewPlyManager.BuildLoadout(self.OldLoadout,self.PlayerLoadout)
 
-		local Pass = ChargeRequisition(self,LoadoutData.cost,"Loadout cost")
+		local Pass = AAS.Funcs.ChargeRequisition(self,LoadoutData.cost,"Loadout cost")
 
 		if not Pass then
 			aasMsg({Colors.BadCol,"You can't afford your loadout! Giving default loadout... (your loadout is still saved)"},self)

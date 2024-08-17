@@ -47,18 +47,11 @@ local function HandleKill(victim,inflictor,attacker)
 	if (victim:Team() == attacker:Team()) then
 		attacker:SetFrags(attacker:Frags() - 2)
 
-		AdjustKarma(attacker,-25)
+		AAS.Funcs.AdjustKarma(attacker,-25)
 		aasMsg({Colors.BadCol,"You just teamkilled " .. victim:Nick() .. "!"},attacker)
 
 		if victim:IsPlayer() then victim:SetNW2Float("NextSpawn",CurTime() + 1) end -- pity respawn timer for the player that got teamkilled
 	end
-end
-
--- This adjusts how much requisition the player gets per interval
-function AdjustKarma(Ply,Amount)
-	if not Ply:IsPlayer() then return end
-	local OldKarma = Ply:GetNW2Int("Karma",0)
-	Ply:SetNW2Int("Karma",math.Clamp(OldKarma + Amount,-100,100))
 end
 
 local function Payday(ply) -- gives targetted player (or all players if nil is given) a regular income of requisition
@@ -70,14 +63,14 @@ local function Payday(ply) -- gives targetted player (or all players if nil is g
 		for k,v in ipairs(player.GetAll()) do
 			if v.NextPay and (v.NextPay > Time) then continue end
 			local Gain = math.Round(math.Clamp((MaxGain / 2) + ((v:GetNW2Int("Karma",0) / 100) * (MaxGain / 2)),0,MaxGain))
-			ChargeRequisition(v,-Gain)
+			AAS.Funcs.ChargeRequisition(v,-Gain)
 
 			v.NextPay = Time + 60
 		end
 	else
 		if ply.NextPay and (ply.NextPay > Time) then return end
 		local Gain = math.Round(math.Clamp((MaxGain / 2) + ((ply:GetNW2Int("Karma",0) / 100) * (MaxGain / 2)),0,MaxGain))
-		ChargeRequisition(ply,-Gain)
+		AAS.Funcs.ChargeRequisition(ply,-Gain)
 
 		ply.NextPay = Time + 60
 	end
@@ -123,7 +116,7 @@ local function DeathCountdown(ply)
 		ply.DeathCountdown = ply.DeathCountdown - 1
 
 		if ply.DeathCountdown >= 0 then
-			AdjustKarma(ply,-10) -- steeply punish the player for being in the enemy safezone
+			AAS.Funcs.AdjustKarma(ply,-10) -- steeply punish the player for being in the enemy safezone
 			timer.Simple(1,function() DeathCountdown(ply) end)
 		else
 			ply.DeathCountdown = nil
@@ -141,9 +134,10 @@ do	-- Organizing stuff :)
 	do	-- Hooks, arr
 
 		-- Ugly mess, handles everything from payday to checking wins if point updates didn't catch it
-		local NextLongThink = ST()
-		local ShortThink = ST()
-		local NextTicketThink = ST()
+		local NextLongThink		= ST()
+		local ShortThink		= ST()
+		local NextTicketThink	= ST()
+		local DoTicketChange	= AAS.Funcs.DoTicketChange
 		hook.Add("Think","GameThink",function()
 			if AAS.Halt == true then return end
 			if not AAS.RAASFinished then return end
@@ -163,9 +157,9 @@ do	-- Organizing stuff :)
 					end
 
 					if PlyInEnemySafezone(ply,ply:GetPos()) and (GetGlobalBool("EditMode",false) == false) and (not ply.DeathCountdown and ply:Alive()) then
-							aasMsg({Colors.BasicCol,"You have ",Colors.BadCol,"entered", Colors.BasicCol," the ",Colors.BadCol,"enemy",Colors.BasicCol," safezone."},ply)
-							ply.DeathCountdown = 5
-							DeathCountdown(ply)
+						aasMsg({Colors.BasicCol,"You have ",Colors.BadCol,"entered", Colors.BasicCol," the ",Colors.BadCol,"enemy",Colors.BasicCol," safezone."},ply)
+						ply.DeathCountdown = 5
+						DeathCountdown(ply)
 					end
 				end
 
@@ -248,7 +242,7 @@ do	-- Organizing stuff :)
 				else AutoBalanceTick = 0 end
 
 				NextLongThink = ST() + 5
-				CalcRequisition()
+				AAS.Funcs.CalcRequisition()
 			end
 		end)
 
@@ -469,7 +463,7 @@ do	-- Organizing stuff :)
 		-- Handles when a player wishes to change teams legitimately, and will block them if they aren't allowed (team misbalance, changing too often)
 		net.Receive("AAS.RequestTeamSwap",function(_,ply)
 			if ply.NextTeamSwitch and (ply.NextTeamSwitch >= ST()) then
-				aasMsg({Colors.ErrorCol,"You can't switch teams for another " .. math.Round(ply.NextTeamSwitch - ST(),1) .. " seconds!"},ply)
+				aasMsg({Colors.ErrorCol, "You can't switch teams for another " .. math.Round(ply.NextTeamSwitch - ST(), 1) .. " seconds!"}, ply)
 				return
 			end
 			local CurTeam = ply:Team()
@@ -480,13 +474,18 @@ do	-- Organizing stuff :)
 				return
 			end
 
+			-- Reset the player's karma if it is over 0 so they have to contribute to get where they were at, otherwise if its low
+			if ply:GetNW2Int("Karma", 0) > 0 then AAS.Funcs.SetKarma(Ply, 0) end
+			ply:SetNW2Int("Requisition", 0)
+			ply.NextPay	= ST()
+
 			ply.FirstSpawn = true
 			ply:SetTeam(OppTeam)
 
-			aasMsg({Colors.BasicCol,ply:Nick() .. " switched to ",AAS.TeamData[ply:Team()].Color, AAS.TeamData[ply:Team()].Name,Colors.BasicCol,"."})
+			aasMsg({Colors.BasicCol,ply:Nick() .. " switched to ",AAS.TeamData[ply:Team()].Color, AAS.TeamData[ply:Team()].Name, Colors.BasicCol, "."})
 
 			ply:Spawn()
-			ply.NextTeamSwitch = ST() + 30
+			ply.NextTeamSwitch = ST() + 60
 		end)
 
 		-- Handles any updates to the server settings, with a myriad of checks to block any unwanted changes

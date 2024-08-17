@@ -34,6 +34,7 @@ if SERVER then
 	include("libs/sv/vote.lua")		-- Vote system
 	include("libs/sv/costcalc.lua")	-- Cost calculation
 	include("libs/sv/tickets.lua")	-- Tickets for team scoring
+	include("libs/sv/plyutil.lua")	-- Various player utilities
 end
 
 -- Client

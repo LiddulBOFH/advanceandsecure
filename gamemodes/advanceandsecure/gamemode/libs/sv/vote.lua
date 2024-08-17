@@ -1,5 +1,7 @@
 MsgN("+ Vote system loaded")
 
+local ST = SysTime
+
 if SERVER then
 	AAS.Voting = false
 	AAS.RTV = false

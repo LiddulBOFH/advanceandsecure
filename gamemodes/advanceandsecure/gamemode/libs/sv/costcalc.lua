@@ -207,7 +207,7 @@ do
 		-- If it is POSITIVE it is a charge
 		-- If it is NEGATIVE it is a gain
 		-- Reason is optional, it'll change the message to display it
-		function ChargeRequisition(Ply,Change,Reason)
+		function AAS.Funcs.ChargeRequisition(Ply,Change,Reason)
 			local Current = Ply:GetNW2Int("Requisition",0)
 			Change = math.Round(Change)
 			if Change > 0 then -- Deduct
@@ -237,7 +237,7 @@ do
 			return true
 		end
 
-		function AAS.CalcCost(E)
+		function AAS.Funcs.CalcCost(E)
 			local Class = E:GetClass()
 			if not AAS.RequisitionCosts.CalcSingleFilter[Class] then return 0 end
 			local Cost = AAS.RequisitionCosts.CalcSingleFilter[Class] or 1
@@ -249,7 +249,7 @@ do
 			return Cost
 		end
 
-		function CalcRequisition()
+		function AAS.Funcs.CalcRequisition()
 			if ST() < NextReqCheck then return end
 			local Ents = {}
 			local EntLookup = {}
@@ -284,7 +284,7 @@ do
 				if not AAS.RequisitionCosts.CalcSingleFilter[Class] then continue end
 
 				local Owner = ent:CPPIGetOwner()
-				local Cost = AAS.CalcCost(ent)
+				local Cost = AAS.Funcs.CalcCost(ent)
 
 				AAS.PlyReq[Owner] = (AAS.PlyReq[Owner] or 0) + Cost
 			end
@@ -297,7 +297,7 @@ do
 			NextReqCheck = ST() + 1
 		end
 
-		function CalcSingleRequisition(Ents)
+		function AAS.Funcs.CalcSingleRequisition(Ents)
 			local TotalCost = 0
 			local CostBreakdown = {}
 			local DupeCenter = nil
@@ -307,7 +307,7 @@ do
 			for _,ent in pairs(Ents) do
 				local Class = ent:GetClass()
 				if not AAS.RequisitionCosts.CalcSingleFilter[Class] then continue end
-				local Cost = AAS.CalcCost(ent)
+				local Cost = AAS.Funcs.CalcCost(ent)
 
 				if not CostBreakdown[ent:GetClass()] then CostBreakdown[ent:GetClass()] = 0 end
 
@@ -342,7 +342,7 @@ do
 		hook.Add("AdvDupe_FinishPasting","CheckDupe",function(Dupe) -- force the requisition calculator to run when a dupe is done pasting
 			local DupeEnts = Dupe[1].CreatedEntities
 			local Ply = Dupe[1].Player
-			local Cost,Breakdown,DupeCenter,Highest = CalcSingleRequisition(DupeEnts)
+			local Cost,Breakdown,DupeCenter,Highest = AAS.Funcs.CalcSingleRequisition(DupeEnts)
 
 			net.Start("AAS.CostPanel")
 				net.WriteVector(DupeCenter)
@@ -351,7 +351,7 @@ do
 				net.WriteUInt(Highest,12)
 			net.Send(Ply)
 
-			CalcRequisition()
+			AAS.Funcs.CalcRequisition()
 			if Cost > (AAS.CurrentProperties["MaxRequisition"] - Ply:GetNW2Int("UsedRequisition")) then
 				aasMsg({Colors.ErrorCol,"Not enough total requisiton to spawn!"},Ply)
 				if not GetGlobalBool("EditMode",false) then error("Not enough requisition!") end -- Doing this will instantly remove the pasted duplication
@@ -373,7 +373,7 @@ do
 
 						print("Charging " .. Ply:Nick() .. " for " .. Cost)
 
-						local CanAfford = ChargeRequisition(Dupe[1].Player,Cost,"Cost of dupe")
+						local CanAfford = AAS.Funcs.ChargeRequisition(Dupe[1].Player, Cost, "Cost of dupe")
 
 						if not CanAfford then
 							aasMsg({Colors.ErrorCol,"You can't afford this dupe!"},Ply)

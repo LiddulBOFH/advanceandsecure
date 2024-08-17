@@ -76,20 +76,6 @@ if SERVER then
 		util.AddNetworkString("AAS.ReceiveDupe")
 		util.AddNetworkString("AAS.ReceiveFile")
 	end
-
-	function aasMsg(msg,ply)
-		net.Start("AAS.Message")
-			net.WriteTable(msg)
-		if ply == nil then net.Broadcast() else net.Send(ply) end
-	end
-
-	function aas_PointStateChange(point,oldstatus,newstatus)
-		net.Start("AAS.UpdatePointState")
-			net.WriteEntity(point)
-			net.WriteInt(oldstatus,3)
-			net.WriteInt(newstatus,3)
-		net.Broadcast()
-	end
 else
 	do	-- Network
 

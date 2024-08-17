@@ -642,6 +642,8 @@ do  -- Stuff to organize
 		-- Also draws an outlined box around the player's team spawn, and an opaque box around the enemy spawn
 		-- When if EditMode, will draw boxes around all spawnpoints
 		local ColorWheel = 0
+		local FriendlyBaseBoxDist	= 2048 ^ 2
+		local EnemyBaseBoxDist		= 8192 ^ 2
 		hook.Add("PostDrawOpaqueRenderables","EditMode3D",function(depth,skybox,skybox3D)
 			local LP = LocalPlayer()
 
@@ -657,7 +659,7 @@ do  -- Stuff to organize
 				local Spawn = AAS.PointAlias[Team == 1 and "SpawnA" or "SpawnB"]
 				local OpSpawn = AAS.PointAlias[Team == 1 and "SpawnB" or "SpawnA"]
 
-				if (LP:GetPos():Distance(Spawn:GetPos()) < 2500) and not skybox3D then
+				if (LP:GetPos():DistToSqr(Spawn:GetPos()) < FriendlyBaseBoxDist) and not skybox3D then
 					render.DrawWireframeBox(Spawn:GetPos(),Angle(),AAS.SpawnBoundA,AAS.SpawnBoundB,Colors.White,false)
 					local R,G,B = AAS.TeamData[Team].Color:Unpack()
 					local BoxCol = Color(R,G,B,32)
@@ -665,11 +667,19 @@ do  -- Stuff to organize
 					render.DrawBox(Spawn:GetPos(),Angle(),AAS.SpawnBoundA * Vector(-1,1,1),AAS.SpawnBoundB * Vector(-1,1,1),BoxCol)
 				end
 
-				if (LP:GetPos():Distance(OpSpawn:GetPos()) < 5000) and not skybox3D then
+				local OpSpawnDist = LP:GetPos():DistToSqr(OpSpawn:GetPos())
+				--print(OpSpawnDist)
+				if (OpSpawnDist < EnemyBaseBoxDist) and not skybox3D then
 					local R,G,B = AAS.TeamData[OpTeam].Color:Unpack()
 					local BoxCol = Color(R,G,B,255)
+
 					render.OverrideDepthEnable(true,true)
-					render.DrawBox(OpSpawn:GetPos(),Angle(),AAS.SpawnBoundA,AAS.SpawnBoundB,BoxCol)
+					if OpSpawnDist < (EnemyBaseBoxDist / 2) then
+						render.DrawBox(OpSpawn:GetPos(),Angle(),AAS.SpawnBoundA,AAS.SpawnBoundB,BoxCol)
+					else
+						local Alpha = (1 - ((OpSpawnDist - (EnemyBaseBoxDist / 2)) / (EnemyBaseBoxDist / 2))) * 255
+						render.DrawBox(OpSpawn:GetPos(),Angle(),AAS.SpawnBoundA,AAS.SpawnBoundB,Color(BoxCol.r, BoxCol.g, BoxCol.b, Alpha))
+					end
 					render.OverrideDepthEnable(false,false)
 				end
 

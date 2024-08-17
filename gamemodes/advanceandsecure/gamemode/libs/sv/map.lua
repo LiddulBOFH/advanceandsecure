@@ -249,7 +249,7 @@ local function loadMap(InputData)
 		end
 	end
 
-	CalcRequisition()
+	AAS.Funcs.CalcRequisition()
 
 	for k,v in ipairs(InputData["points"]) do -- TODO: fix broken sync (1/29/2023 note: I forgot what was not getting synced, but everything seems to be working fine, I will leave this until I know for sure)
 		local point = ents.Create("aas_point")

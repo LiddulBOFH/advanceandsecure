@@ -27,13 +27,18 @@ local function ScrambleTeams()
 	end
 end
 
-function DoTicketChange(Team,Amount,Check)
+function AAS.Funcs.DoTicketChange(Team,Amount,Check)
 	if GetGlobalBool("EditMode",false) == true then return end
 	local Old = AAS.TeamData[Team].Tickets
 	AAS.TeamData[Team].Tickets = math.max(Old + Amount,0)
 
 	AAS.Funcs.updateTeamData()
 	if Check then CheckWin() end
+end
+
+local function SetTeamScore(Score)
+	AAS.RoundCounter = AAS.RoundCounter + (Score ~= 0 and 1 or 0)
+	if Score == 1 then AAS.TeamWins[1] = AAS.TeamWins[1] + 1 elseif Score == -1 then AAS.TeamWins[2] = AAS.TeamWins[2] + 1 end
 end
 
 function CheckWin()
@@ -94,9 +99,4 @@ function CheckWin()
 			AAS.Funcs.setupMap()
 		end
 	end
-end
-
-function SetTeamScore(Score)
-	AAS.RoundCounter = AAS.RoundCounter + (Score ~= 0 and 1 or 0)
-	if Score == 1 then AAS.TeamWins[1] = AAS.TeamWins[1] + 1 elseif Score == -1 then AAS.TeamWins[2] = AAS.TeamWins[2] + 1 end
 end
