@@ -172,22 +172,27 @@ hook.Add("PlayerTick","AAS_PlayerTick",function(ply,cmove)
 	if GetGlobalBool("EditMode",false) == true then return end
 	if ply:InVehicle() then return end
 	if not IsValid(ply) then return end
-	if ply:GetMoveType() ~= MOVETYPE_NOCLIP then return end
+	if ply:GetMoveType() ~= MOVETYPE_NOCLIP then
+		if not ply:IsOnGround() then
+			local vel = cmove:GetVelocity()
+			cmove:SetVelocity(vel * Vector(0.98,0.98,1))
+		end
+	else
+		if not PlyInSafezone(ply,cmove:GetOrigin() + (cmove:GetVelocity() * FrameTime())) then
+			if not AAS.PointAlias then return end
+			local Team = ply:Team()
+			local Spawn = AAS.PointAlias[Team == 1 and "SpawnA" or "SpawnB"]
+			local SpawnPos = Vector()
+			if IsValid(Spawn) then
+				SpawnPos = Spawn:GetPos()
+			else return end
 
-	if not PlyInSafezone(ply,cmove:GetOrigin() + (cmove:GetVelocity() * FrameTime())) then
-		if not AAS.PointAlias then return end
-		local Team = ply:Team()
-		local Spawn = AAS.PointAlias[Team == 1 and "SpawnA" or "SpawnB"]
-		local SpawnPos = Vector()
-		if IsValid(Spawn) then
-			SpawnPos = Spawn:GetPos()
-		else return end
+			local OBMin,OBMax = ply:OBBMins(),ply:OBBMaxs()
+			cmove:SetOrigin(ClampVector(ply:GetPos() - (cmove:GetVelocity() * FrameTime()),SpawnPos + AAS.SpawnBoundA - OBMin,SpawnPos + AAS.SpawnBoundB - OBMax)) -- we keep the fly in the box
+		end
 
-		local OBMin,OBMax = ply:OBBMins(),ply:OBBMaxs()
-		cmove:SetOrigin(ClampVector(ply:GetPos() - (cmove:GetVelocity() * FrameTime()),SpawnPos + AAS.SpawnBoundA - OBMin,SpawnPos + AAS.SpawnBoundB - OBMax)) -- we keep the fly in the box
+		cmove:SetVelocity(Vector()) -- this doesn't affect noclip, but will stop the player's velocity when they leave noclip; that stops people from slingshotting out of the safezone
 	end
-
-	cmove:SetVelocity(Vector()) -- this doesn't affect noclip, but will stop the player's velocity when they leave noclip; that stops people from slingshotting out of the safezone
 end)
 
 hook.Add("PlayerNoClip","AAS_Noclip",function(ply,state)

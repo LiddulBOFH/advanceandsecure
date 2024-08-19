@@ -95,8 +95,8 @@ NewPlyManager.AmmoCost = { -- Points per bullet (will be rounded up)
 	Pistol = 0.05,
 	["357"] = 0.25,
 	Buckshot = 0.25,
-	XBowBolt = 2.5,
-	SMG1_Grenade = 5,
+	XBowBolt = 5,
+	SMG1_Grenade = 7.5,
 	RPG_Round = 10
 }
 
@@ -108,8 +108,8 @@ NewPlyManager.DefaultLoadout = {
 	Gadget2 = ""
 }
 
-NewPlyManager.BaseMoveSpeed = 275
-NewPlyManager.MinMoveSpeed = 100
+NewPlyManager.BaseMoveSpeed = 250
+NewPlyManager.MinMoveSpeed = 90
 
 if SERVER then
 	local function AmmoDiff(ply,weapon)

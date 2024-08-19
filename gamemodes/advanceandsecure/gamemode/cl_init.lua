@@ -60,6 +60,7 @@ BTeamHalf[4] = {x = SM.x, y = UU * 0.5}
 
 local function PointChange(Point,OldStatus,NewStatus)
 	if PointChangeBase then PointChangeBase:Remove() end
+	if not IsValid(Point) then return end
 
 	PointChangeBase = vgui.Create("Panel")
 	PointChangeBase:SetSize(UU * 8,UU * 2)

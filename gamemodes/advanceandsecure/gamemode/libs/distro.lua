@@ -3,12 +3,12 @@ MsgN("+ Distribution loaded")
 if SERVER then
 	local DupeList = nil
 	local function BuildDupeList()
-		local Dupes,_ = file.Find(engine.ActiveGamemode() .. "/distributables/advdupe2/*.txt","LUA")
+		local Dupes,_ = file.Find("aas/dupes/*.txt","DATA")
 
 		DupeList = {}
 
 		for k,v in pairs(Dupes) do
-			local FileSize = file.Size(engine.ActiveGamemode() .. "/distributables/advdupe2/" .. v,"LUA")
+			local FileSize = file.Size("aas/dupes/" .. v,"DATA")
 			DupeList[string.StripExtension(v)] = {txt = v,size = FileSize,strsize = math.Round(FileSize / 1024,2) .. "kB"}
 		end
 	end
@@ -19,9 +19,10 @@ if SERVER then
 		if not FileQueue[ply] then print("No file queued for player") return end
 		local PlyFile = FileQueue[ply]
 
-		PlyFile.OpenFile = file.Open(engine.ActiveGamemode() .. "/distributables/advdupe2/" .. PlyFile.file .. ".txt","rb","LUA")
+		PlyFile.OpenFile = file.Open("aas/dupes/" .. PlyFile.file .. ".txt","rb","DATA")
 
 		local ReadData = PlyFile.OpenFile:Read(PlyFile.OpenFile:Size())
+		PlyFile.OpenFile:Close()
 		local _,dupe,_,_ = AdvDupe2.Decode(ReadData)
 
 		net.Start("AAS.ReceiveDupe")
@@ -216,7 +217,7 @@ else	-- Client
 	local function AAS_ReceiveFile(len, ply) -- A little hijacking here and there from AdvDupe2 and we've now got an ez-dupe system for people to get public dupes from the server
 		net.ReadStream(nil, function(data)
 
-			if data then
+			if not data then
 				chat.AddText(Color(255,0,0),"File was not saved!")
 				return
 			end

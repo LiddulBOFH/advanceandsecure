@@ -20,6 +20,7 @@ function GM:Initialize()
 	RunConsoleCommand("physgun_maxrange", 256)
 	RunConsoleCommand("physgun_maxspeed", 400)
 	RunConsoleCommand("physgun_maxangular", 400)
+	RunConsoleCommand("sv_airaccelerate", 1)
 
 	if not file.Exists("aas","DATA") then
 		MsgN("Missing base directory 'aas', making...")
