@@ -92,7 +92,7 @@ local function PointChange(Point,OldStatus,NewStatus)
 		else
 			PolyCol = Col
 			CapCol = (NewStatus == CurrentTeam and Colors.GoodCol or Colors.BadCol)
-			CapText = "Captured by " .. (AAS.TeamData[CappingTeam].Name or "")
+			if AAS.TeamData[CappingTeam] then CapText = "Captured by " .. (AAS.TeamData[CappingTeam].Name or "") else CapText = "Captured by" end
 		end
 
 		local CX,CY = w / 2,h / 2
