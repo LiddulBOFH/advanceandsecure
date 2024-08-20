@@ -18,3 +18,7 @@ Cost calculator available as an E2, which is generated using the server's settin
 Has integration with another addon of mine, BAdmin
 
 Also has a special AdvDupe2 file distribution system, allowing servers to provide dupes to players
+
+### Usage
+
+Simply clone into garrysmod/addons, and set the server to load "advanceandsecure" as the gamemode.
