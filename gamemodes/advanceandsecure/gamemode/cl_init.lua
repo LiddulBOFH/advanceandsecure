@@ -47,7 +47,7 @@ do  -- Stuff to organize
 			if State.Data.Line then
 				for k,v in ipairs(State.Data.Line) do
 					local Point = State.Alias[v]
-					if not IsValid(Point) then print("Failed to get point alias!") timer.Simple(1, function() AAS.Funcs.InitPlayer() end) return end
+					if not IsValid(Point) then timer.Simple(1, function() AAS.Funcs.InitPlayer() end) return end
 
 					local Name = Point:GetPointName()
 					if (Name ~= "SpawnA") and (Name ~= "SpawnB") then table.insert(State.ClientPointLine, Point) end

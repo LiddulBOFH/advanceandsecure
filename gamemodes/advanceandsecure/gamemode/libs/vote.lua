@@ -40,7 +40,7 @@ if SERVER then
 
 				for _, f in pairs(files) do
 					local fin = string.StripExtension(f)
-					if (map == game.GetMap()) and (fin == AAS.ModeCV:GetString()) then print("skipping current mode", map, fin) continue end
+					if (map == game.GetMap()) and (fin == AAS.ModeCV:GetString()) then continue end
 
 					local index = map .. "/" .. fin
 					table.insert(Maps, index)
@@ -48,7 +48,7 @@ if SERVER then
 				end
 			end
 
-			if #Maps == 0 then AAS.Funcs.finishVote(5) print("No choices!") return end
+			if #Maps == 0 then AAS.Funcs.finishVote(5) return end
 		end
 
 		for i = 1,math.min(#Maps,3),1 do
@@ -57,8 +57,6 @@ if SERVER then
 			table.remove(Maps,Pick)
 		end
 
-		PrintTable(Maps)
-
 		AAS.Voting = true
 		SetGlobalBool("AAS.Voting",AAS.Voting)
 
@@ -66,15 +64,8 @@ if SERVER then
 
 		CurrentVoteList = table.Copy(Choices)
 
-		--[[
-		print("================= MAPS")
-		PrintTable(Maps)
-		print("================= CHOICES")
-		PrintTable(Choices)
-		]]--
-
 		net.Start("AAS.OpenVotes")
-			net.WriteFloat(CT() + 7.5)
+			net.WriteFloat(CT() + 30)
 			net.WriteBool(AAS.RTV)
 			net.WriteTable(Choices)
 		net.Broadcast()
@@ -83,7 +74,7 @@ if SERVER then
 
 		UpdateVotes()
 
-		timer.Simple(7.5, AAS.Funcs.countVotes)
+		timer.Simple(30, AAS.Funcs.countVotes)
 	end
 	AAS.Funcs.openVotes = OpenVotes
 
@@ -99,6 +90,8 @@ if SERVER then
 
 			OpenVotes()
 		elseif Choice == 5 then
+			aasMsg({Colors.BasicCol,"Refreshing the map!"})
+
 			AAS.Funcs.ScrambleTeams()
 
 			AAS.Funcs.FullReload()
@@ -110,7 +103,7 @@ if SERVER then
 		AAS.Voting = false
 		SetGlobalBool("AAS.Voting",AAS.Voting)
 
-		print("Counting votes!")
+		aasMsg({Colors.BasicCol,"Counting votes!"})
 		local Count = {}
 
 		if table.Count(VoteData) == 0 then
@@ -118,6 +111,8 @@ if SERVER then
 				AAS.Funcs.finishVote(5) -- just refresh the map, dunno how we got here
 			else
 				AAS.Funcs.finishVote(math.random(1,3))
+
+				aasMsg({Colors.BasicCol,"No votes received, picking randomly!"})
 				return
 			end
 		end

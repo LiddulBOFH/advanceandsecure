@@ -214,7 +214,7 @@ do	-- Hookery
 
 				timer.Simple(1,function() ply:Spawn() end)
 			else
-				if not AAS.Spawnpoints then print("No spawnpoints!") return end
+				if not AAS.Spawnpoints then aasMsg({Colors.ErrorCol, "AAS: No spawnpoints found"}) return end
 
 				if not ply.FirstSpawn then -- Deduct 1 ticket from the team for respawning
 					if AAS.Funcs.GetSetting("Death ticket loss", false) == true then AAS.Funcs.DoTicketChange(Team,-1,true) end

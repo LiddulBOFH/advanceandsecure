@@ -5,11 +5,9 @@ if SERVER then
 	-- Handles any updates to the server settings, with a myriad of checks to block any unwanted changes
 	net.Receive("AAS.UpdateServerSettings",function(_,ply)
 		local Settings = net.ReadTable()
-		if ply == nil then print("how?") return end
+		if ply == nil then return end
 		if not ply:IsSuperAdmin() then print(ply:Nick() .. " attempted to update server settings.") return end
 		if not GetGlobalBool("EditMode",false) then print(ply:Nick() .. " attempted to update server settings.") return end
-
-		--PrintTable(Settings)
 
 		for k,v in pairs(Settings) do
 			if not AAS.GM.Settings[k] then print("Skipped " .. k .. " as it is not a valid setting.") continue end
@@ -18,8 +16,6 @@ if SERVER then
 
 			if v.value ~= OldSetting.value then
 				print("== " .. k .. " was changed!\n| Old value: " .. tostring(AAS.GM.Settings[k].value) .. "\n| New value: " .. tostring(v.value))
-
-
 
 				if OldSetting.type == "number" then
 					AAS.GM.Settings[k].value = math.Clamp(v.value, OldSetting.min, OldSetting.max)

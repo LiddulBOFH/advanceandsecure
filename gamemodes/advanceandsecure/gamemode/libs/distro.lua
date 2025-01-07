@@ -16,7 +16,7 @@ if SERVER then
 
 	local FileQueue = {}
 	local function SendChunk(ply)
-		if not FileQueue[ply] then print("No file queued for player") return end
+		if not FileQueue[ply] then return end
 		local PlyFile = FileQueue[ply]
 
 		PlyFile.OpenFile = file.Open("aas/dupes/" .. PlyFile.file .. ".txt","rb","DATA")

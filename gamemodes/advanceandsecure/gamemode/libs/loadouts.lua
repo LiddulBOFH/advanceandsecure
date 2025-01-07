@@ -640,8 +640,6 @@ else
 			InfoPanel.Cost = Cost
 			InfoPanel.WU = math.Round(WU,1)
 			InfoPanel.Movespeed = math.Clamp(math.ceil(Movespeed - (WU * 2.5)),NewPlyManager.MinMoveSpeed,Movespeed)
-
-			--print(InfoPanel.Cost,InfoPanel.WU,InfoPanel.Movespeed)
 		end
 		InfoPanel:CalcInfo()
 

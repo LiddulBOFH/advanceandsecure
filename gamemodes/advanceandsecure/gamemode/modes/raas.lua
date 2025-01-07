@@ -88,8 +88,6 @@ GMT.Load	= function(MapData) -- Assemble the map here, like placing points/spawn
 
 				UsedList[MidPoint]	= true
 
-				print("Picking from " .. (math.Clamp(  math.ceil(NumPoints / 5) , 1, 6)) .. " points for midline")
-				print("Culled " .. (math.max(math.ceil(NumPoints / 4), 1)) .. " points from midline")
 				for i = 1, math.max(math.ceil(NumPoints / 4), 1) do
 					local point = AllPoints[i]
 					UsedList[point] = true
@@ -177,7 +175,7 @@ GMT.TicketThink	= function() -- Called when the server is doing ticket changes
 	local Points = ents.FindByClass("aas_point")
 	local TotalPoints = #Points - 2 -- There are always atleast 2 points due to team spawns technically being points
 
-	if TotalPoints == 0 then AAS.Funcs.Stop() MsgN("[AAS] Halting game due to no capturable points being available.") end
+	if TotalPoints == 0 then AAS.Funcs.Stop() aasMsg({Colors.ErrorCol,"[AAS] Halting game due to no capturable points being available."}) end
 
 	for _, v in ipairs(Points) do
 		if v:GetIsSpawn() then continue end

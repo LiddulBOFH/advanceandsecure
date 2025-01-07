@@ -206,19 +206,17 @@ if SERVER then
 			ScanState.x = 0
 			ScanState.y = ScanState.y + 1
 
-			--print(math.Round((getIndex(ScanState.x, ScanState.y) / (res ^ 2)) * 100,1) .. "%", "State: " .. ScanState.State)
-
 			if ScanState.y > res then
 
 				if iterState[ScanState.State + 1] then
-					print("=== Finished state " .. ScanState.State)
+					print("[AAS Mapscan] Finished state " .. ScanState.State)
 
 					ScanState.State = ScanState.State + 1
 
 					ScanState.x = 1
 					ScanState.y = 1
 				else
-					print("=== Finished map processing!")
+					print("[AAS Mapscan] Finished map processing!")
 					ScanState.Running	= false
 					ScanState.Finished	= true
 
@@ -258,7 +256,7 @@ if SERVER then
 	end
 
 	AAS.Funcs.SendMap	= function(ply)
-		if not ScanState.Finished then Queued[ply] = true MsgN("Map has not finished scanning yet!") if not ScanState.Running then AAS.Funcs.StartScan() end return end
+		if not ScanState.Finished then Queued[ply] = true if not ScanState.Running then AAS.Funcs.StartScan() end return end
 
 		local CompressedData = util.Compress(util.TableToJSON(ScanState.Output))
 
@@ -294,13 +292,8 @@ else
 
 		if MapData.pointer < heapsize then
 			MapData.pointer = MapData.pointer + 16384
-			print("step", MapData.pointer)
 		else
-			print("image saved!")
-
 			MapData.openfile:Close()
-
-			print(file.Size(MapData.file, "DATA"))
 
 			AAS.Funcs.CheckMap()
 
@@ -314,7 +307,7 @@ else
 
 	local function generate()
 		for i = 1, 512 do
-			if MapData.png.done == true then print("stopping", MapData.pointer, blocksize) break end
+			if MapData.png.done == true then break end
 			local index = MapData.pointer + i
 
 			local data	= MapData.decompressed[index] or 0
@@ -322,22 +315,14 @@ else
 			local color	= Color(0, 0, 0, 0)
 			if data ~= 0 then
 				color	= digi2color(data)
-
-				--print(index)
-				--PrintTable(color:ToTable())
 			end
 
 			MapData.png:write(color:ToTable())
-			--MapData.png:write(ColorRand(true):ToTable())
 		end
-
-		--print(MapData.pointer)
 
 		if not MapData.png.done and (MapData.pointer < blocksize) then
 			MapData.pointer = MapData.pointer + 512
 		else
-			print("Ding!")
-
 			MapData.pointer = 0
 
 			file.Write(MapData.file, "")
@@ -376,8 +361,6 @@ else
 
 	net.Receive("AAS.SendMapScan", function(len)
 		local CompressedData	= net.ReadData(len)
-
-		print("Received map!")
 
 		AAS.Funcs.GeneratePNG(util.JSONToTable(util.Decompress(CompressedData), true))
 	end)

@@ -241,8 +241,6 @@ do
 
 			if CostFilter[Class] then
 				Cost = CostFilter[Class](E)
-
-				if Class == "primitive_shape" then print(E, E:GetPhysicsObject():GetMass(), Cost) end
 			end
 
 			return Cost

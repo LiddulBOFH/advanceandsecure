@@ -130,7 +130,7 @@ local ToolFuncs = {
 		elseif stage == 1 then
 			if not (ent:GetIsSpawn() == true and ent:GetTeamSpawn() == 2) then
 				for k,v in ipairs(tool.ManualLink) do
-					if ent == v then if CLIENT then chat.AddText(Colors.red,"This point is already in the list!") end print(ent,v) return end
+					if ent == v then if CLIENT then chat.AddText(Colors.red,"This point is already in the list!") end return end
 				end
 			end
 
