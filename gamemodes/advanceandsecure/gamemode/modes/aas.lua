@@ -15,6 +15,8 @@ GMT.Init	= function(MapData)	-- Setup whatever is required for this gamemode to 
 end
 
 GMT.Load	= function(MapData) -- Assemble the map here, like placing points/spawns
+	if MapData.Settings["Non-linear"] == true then return end
+
 	AAS.State.Data["Line"] = MapData.Data.Line
 	AAS.State.LineLookup	= {}
 	for k,v in ipairs(AAS.State.Data["Line"]) do
