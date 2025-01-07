@@ -6,9 +6,10 @@ if SERVER then
 	AAS.Voting = false
 	AAS.RTV = false
 	AAS.RoundCounter = 1
-	AAS.TeamWins = {0,0}
+	team.SetScore(1,0)
+	team.SetScore(2,0)
 
-	local PreMapList = {}
+	local MapLookup	= {}
 	local CurrentVoteList = {}
 	local VoteData = {}
 
@@ -19,44 +20,51 @@ if SERVER then
 		end
 
 		for i = 1,5,1 do
-			SetGlobalInt("vote_" .. i,0)
+			SetGlobal2Int("vote_" .. i,0)
 		end
 
 		for k,v in pairs(Counts) do
-			SetGlobalInt("vote_" .. k,v or 0)
+			SetGlobal2Int("vote_" .. k,v or 0)
 		end
 	end
 
 	local Maps = {}
 	local function OpenVotes()
-		if table.IsEmpty(PreMapList) then
-			PreMapList = file.Find("aas/maps/*.txt","DATA")
+		local Choices	= {}
 
-			for k,v in ipairs(PreMapList) do
-				local str = string.StripExtension(v)
-				if str == game.GetMap() then continue end
-				Maps[k] = str
+		if table.IsEmpty(Maps) then
+			local _, MapDirs = file.Find("aas/maps/*", "DATA")
+
+			for _, map in pairs(MapDirs) do
+				local files = file.Find("aas/maps/" .. map .. "/*.txt", "DATA")
+
+				for _, f in pairs(files) do
+					local fin = string.StripExtension(f)
+					if (map == game.GetMap()) and (fin == AAS.ModeCV:GetString()) then print("skipping current mode", map, fin) continue end
+
+					local index = map .. "/" .. fin
+					table.insert(Maps, index)
+					MapLookup[index]	= {map = map, mode = fin}
+				end
 			end
 
-			if #Maps == 0 then AAS.Funcs.finishVote(5) return end
+			if #Maps == 0 then AAS.Funcs.finishVote(5) print("No choices!") return end
 		end
 
-		local Choices = {}
-
-		print(math.min(#Maps,3))
 		for i = 1,math.min(#Maps,3),1 do
 			local Pick = math.random(1,#Maps)
 			Choices[i] = Maps[Pick]
 			table.remove(Maps,Pick)
 		end
 
+		PrintTable(Maps)
+
 		AAS.Voting = true
 		SetGlobalBool("AAS.Voting",AAS.Voting)
 
 		AAS.RTV = (#Maps > 0)
-		print(AAS.RTV)
 
-		local CheckTime = 30
+		local CheckTime = 5
 
 		CurrentVoteList = table.Copy(Choices)
 
@@ -84,14 +92,18 @@ if SERVER then
 	local function FinishVote(Choice)
 		if Choice <= 3 then
 			if #CurrentVoteList == 0 then AAS.Funcs.finishVote(5) return end -- Just more insurance, if somehow we managed to get this vote here, we'll safely restart the map
-			RunConsoleCommand("changelevel",CurrentVoteList[math.min(Choice,#CurrentVoteList)])
+			local MapReturn = MapLookup[CurrentVoteList[math.min(Choice,#CurrentVoteList)]]
+			AAS.FirstLoad	= true
+			AAS.ModeCV:SetString(MapReturn.mode)
+			RunConsoleCommand("changelevel", MapReturn.map)
 		elseif Choice == 4 then
-			aasMsg({Colors.BasicCol,"Refreshing the vote, old choices are no longer available!"})
+			aasMsg({Colors.BasicCol,"Rerolling the vote, old choices are no longer available!"})
+
 			OpenVotes()
 		elseif Choice == 5 then
-			ScrambleTeams()
-			AAS.Funcs.deepReset()
-			AAS.Funcs.setupMap()
+			AAS.Funcs.ScrambleTeams()
+
+			AAS.Funcs.FullReload()
 		end
 	end
 	AAS.Funcs.finishVote = FinishVote
@@ -128,7 +140,7 @@ if SERVER then
 
 			-- Receives vote info and updates clients about that, otherwise will send a rude message to anyone thats trying to circumvent it
 			net.Receive("AAS.ReceiveVote",function(_,ply)
-				if not AAS.Voting then aasMsg({Colors.ErrorCol,"Bugger off"},ply) return end
+				if not AAS.Voting then aasMsg({Colors.ErrorCol, "Bugger off"}, ply) return end
 				local Choice = net.ReadUInt(3)
 
 				VoteData[ply] = Choice
@@ -141,7 +153,7 @@ if SERVER then
 else	-- Cient
 	local Choices = {}
 	local RTV = false
-	local Time = SysTime() + 0
+	local Time = 0
 
 	local function SendVote(choice)
 		net.Start("AAS.ReceiveVote")
@@ -149,6 +161,7 @@ else	-- Cient
 		net.SendToServer()
 	end
 
+	if VotePanel then VotePanel:Remove() end
 	local function VoteMenu()
 		if VotePanel then VotePanel:Remove() end
 
@@ -168,9 +181,13 @@ else	-- Cient
 			draw.SimpleText("MAP VOTING","BasicFontLarge",w / 2,10,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_TOP)
 			local TimeLeft = math.Clamp(math.Round(Time - SysTime(),1),0,30)
 
-			if TimeLeft < 10 then surface.SetDrawColor(127,0,0) else surface.SetDrawColor(0,127,0) end
+			if TimeLeft < 10 then surface.SetDrawColor(200,0,0) else surface.SetDrawColor(0,200,0) end
 			surface.DrawRect(0,h - 12,w * (TimeLeft / 30),12)
 			draw.SimpleText("TIME REMAINING: " .. tostring(TimeLeft),"BasicFont",w / 2,h,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_BOTTOM)
+		end
+		VotePanel.Think	= function()
+			local TimeLeft = math.Clamp(math.Round(Time - SysTime(),1),0,30)
+			if TimeLeft == 0 then VotePanel:Remove() end
 		end
 		VotePanel:SetTitle("")
 
@@ -195,7 +212,7 @@ else	-- Cient
 				if selected == self.Index then surface.SetDrawColor(0,127,0) else surface.SetDrawColor(100,100,100) end
 				surface.DrawRect(0,0,h,h)
 
-				draw.SimpleText(tostring(GetGlobalInt("vote_" .. self.Index,0)),"BasicFontLarge",h / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+				draw.SimpleText(tostring(GetGlobal2Int("vote_" .. self.Index,0)),"BasicFontLarge",h / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 
 				draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 			end
@@ -227,7 +244,7 @@ else	-- Cient
 				if selected == self.Index then surface.SetDrawColor(0,127,0) else surface.SetDrawColor(100,100,100) end
 				surface.DrawRect(0,0,h,h)
 
-				draw.SimpleText(tostring(GetGlobalInt("vote_" .. self.Index,0)),"BasicFontLarge",h / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+				draw.SimpleText(tostring(GetGlobal2Int("vote_" .. self.Index,0)),"BasicFontLarge",h / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 
 				draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 			end
@@ -258,7 +275,7 @@ else	-- Cient
 			if selected == self.Index then surface.SetDrawColor(0,127,0) else surface.SetDrawColor(100,100,100) end
 			surface.DrawRect(0,0,h,h)
 
-			draw.SimpleText(tostring(GetGlobalInt("vote_" .. self.Index,0)),"BasicFontLarge",h / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+			draw.SimpleText(tostring(GetGlobal2Int("vote_" .. self.Index,0)),"BasicFontLarge",h / 2,h / 2,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 
 			draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 		end

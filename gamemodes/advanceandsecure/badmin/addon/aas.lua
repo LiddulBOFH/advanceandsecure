@@ -13,8 +13,7 @@ BAdmin.Utilities.addCommand("aas_editmode",callfunc,cmdSettings)
 
 
 function callfunc(ply,args) -- Reload
-	AAS.Funcs.deepReset()
-	AAS.Funcs.setupMap()
+	AAS.Funcs.FullReload()
 
 	return true
 end
@@ -28,7 +27,7 @@ BAdmin.Utilities.addCommand("aas_load",callfunc,cmdSettings)
 
 
 function callfunc(ply,args) -- Save
-	AAS.Funcs.saveMap()
+	AAS.Funcs.SaveMap()
 
 	return true
 end

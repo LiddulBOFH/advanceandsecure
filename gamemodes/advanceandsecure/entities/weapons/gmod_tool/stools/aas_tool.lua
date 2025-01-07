@@ -139,9 +139,9 @@ local ToolFuncs = {
 				tool.ManualLink[#tool.ManualLink + 1] = ent
 
 				if SERVER then
-					AAS.ManualLink = {}
+					AAS.State.Data["Line"] = {}
 					for k,v in ipairs(tool.ManualLink) do
-						AAS.ManualLink[k] = v:GetPointName()
+						AAS.State.Data["Line"][k] = v:GetPointName()
 					end
 				end
 
@@ -253,7 +253,7 @@ function TOOL:Reload()
 		else
 			if SERVER then
 				aasMsg({Colors.white,"Cleared the manual link list on the map."})
-				if AAS.ManualLink then AAS.ManualLink = nil end
+				if AAS.State.Data["Line"] then AAS.State.Data["Line"] = nil end
 			end
 		end
 	elseif op == 2 then

@@ -8,8 +8,8 @@ AAS.PlyReq = {}
 AAS.RequisitionCosts = {}
 
 AAS.RequisitionCosts.CalcSingleFilter = {
-	gmod_wire_expression2	= 2.5,
-	starfall_processor		= 2.5,
+	gmod_wire_expression2	= 0.75,
+	starfall_processor		= 0.75,
 	acf_piledriver			= 5,
 	acf_rack				= 10,
 	acf_engine				= 1,
@@ -20,7 +20,7 @@ AAS.RequisitionCosts.CalcSingleFilter = {
 	acf_radar				= 10,
 	gmod_wire_gate			= 1,
 	primitive_shape			= 1,
-	acf_turret				= 1,
+	--acf_turret				= 1,
 	acf_turret_motor		= 1,
 	acf_turret_gyro			= 1,
 	acf_turret_computer		= 1,
@@ -28,30 +28,30 @@ AAS.RequisitionCosts.CalcSingleFilter = {
 
 AAS.RequisitionCosts.ACFGunCost = { -- anything not on here costs 1
 	SB	= 1, -- old smoothbores, leaving
-	C	= 0.9,
-	SC	= 0.7,
+	C	= 0.5,
+	SC	= 0.3,
 	AC	= 1.2,
 	LAC	= 1.1,
 	HW	= 0.75,
 	MO	= 0.75,
 	RAC	= 2,
 	SA	= 1,
-	AL	= 1.1,
-	GL	= 0.75,
-	MG	= 0.1,
+	AL	= 0.8,
+	GL	= 0.5,
+	MG	= 0.25,
 	SL	= 0.02,
 	FGL	= 0.125
 }
 
 AAS.RequisitionCosts.ACFAmmoModifier = { -- Anything not in here is 0.2
-	AP		= 0.3,
-	APCR	= 0.4,
-	APDS	= 0.55,
-	APFSDS	= 0.7,
-	APHE	= 0.3,
-	HE		= 0.25,
-	HEAT	= 0.35,
-	HEATFS	= 0.45,
+	AP		= 0.4,
+	APCR	= 0.6,
+	APDS	= 0.8,
+	APFSDS	= 1,
+	APHE	= 0.5,
+	HE		= 0.35,
+	HEAT	= 0.65,
+	HEATFS	= 0.85,
 	FL		= 0.25,
 	HP		= 0.1,
 	SM		= 0.1,
@@ -84,8 +84,8 @@ AAS.RequisitionCosts.ACFRadars = { -- Should be prohibitively expensive, default
 
 	-- Contraption detecting radars
 	["LargeDIR-TGT"]	= 60,
-	["MediumDIR-TGT"]	= 40,
-	["SmallDIR-TGT"]	= 20,
+	["MediumDIR-TGT"]	= 35,
+	["SmallDIR-TGT"]	= 15,
 
 	["LargeOMNI-TGT"]	= 80,
 	["MediumOMNI-TGT"]	= 50,
@@ -142,7 +142,7 @@ AAS.RequisitionCosts.SpecialModelFilter = { -- any missile rack not in here cost
 
 local CostFilter = {}
 CostFilter["acf_gun"] = function(E) return (AAS.RequisitionCosts.ACFGunCost[E.Class] or 1) * E.Caliber end
-CostFilter["acf_engine"] = function(E) return math.max(5,E.PeakTorque / 100) end
+CostFilter["acf_engine"] = function(E) return math.max(5,(E.PeakTorque / 160) + (E.PeakPower / 80)) end
 CostFilter["acf_rack"] = function(E)
 	if AAS.RequisitionCosts.SpecialModelFilter[E:GetModel()] then
 		return AAS.RequisitionCosts.SpecialModelFilter[E:GetModel()]
@@ -169,9 +169,6 @@ CostFilter["acf_ammo"] = function(E)
 	end
 end
 
-CostFilter["acf_turret"] = function(E)
-	return 1 + (E.TurretData.RingSize / 6)
-end
 CostFilter["acf_turret_motor"] = function(E)
 	return E.CompSize * 2
 end
@@ -214,7 +211,7 @@ do
 				if Change > Current then return false, "Overdrawn" end
 				Ply:SetNW2Int("Requisition",Current - Change)
 			else
-				Ply:SetNW2Int("Requisition",math.min(Current + math.abs(Change),AAS.CurrentProperties["MaxRequisition"]))
+				Ply:SetNW2Int("Requisition",math.min(Current + math.abs(Change), AAS.Funcs.GetSetting("Max Requisition", 500)))
 			end
 			local Diff = Ply:GetNW2Int("Requisition",0) - Current
 
@@ -244,6 +241,8 @@ do
 
 			if CostFilter[Class] then
 				Cost = CostFilter[Class](E)
+
+				if Class == "primitive_shape" then print(E, E:GetPhysicsObject():GetMass(), Cost) end
 			end
 
 			return Cost
@@ -289,7 +288,7 @@ do
 				AAS.PlyReq[Owner] = (AAS.PlyReq[Owner] or 0) + Cost
 			end
 
-			for k,v in ipairs(player.GetAll()) do
+			for k,v in player.Iterator() do
 				AAS.PlyReq[v] = math.ceil(AAS.PlyReq[v] or 0)
 				v:SetNW2Int("UsedRequisition",AAS.PlyReq[v] or 0)
 			end
@@ -352,7 +351,7 @@ do
 			net.Send(Ply)
 
 			AAS.Funcs.CalcRequisition()
-			if Cost > (AAS.CurrentProperties["MaxRequisition"] - Ply:GetNW2Int("UsedRequisition")) then
+			if Cost > (AAS.Funcs.GetSetting("Max Requisition", 300) - Ply:GetNW2Int("UsedRequisition")) then
 				aasMsg({Colors.ErrorCol,"Not enough total requisiton to spawn!"},Ply)
 				if not GetGlobalBool("EditMode",false) then error("Not enough requisition!") end -- Doing this will instantly remove the pasted duplication
 			else

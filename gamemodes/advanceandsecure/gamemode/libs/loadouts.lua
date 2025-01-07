@@ -13,66 +13,81 @@ NewPlyManager = NewPlyManager or {Classes = {}}
 	TODO: Allow players to save loadouts
 ]]--
 
-NewPlyManager.Weapons = { -- If it ain't here, you can't have it
-	-- RIFFLES
-	weapon_acf_ak47         = {Name = "AK47",Cost = 0, Type = "Rifle", WU = 3.5},
-	weapon_acf_aug          = {Name = "AUG",Cost = 6, Type = "Rifle", WU = 4},
-	weapon_acf_famas        = {Name = "Famas",Cost = 5, Type = "Rifle", WU = 4},
-	weapon_acf_galil        = {Name = "Galil",Cost = 7, Type = "Rifle", WU = 5},
-	weapon_acf_garand       = {Name = "M1 Garand",Cost = 5, Type = "Rifle", WU = 5.5},
-	weapon_acf_kar98k       = {Name = "Kar98K",Cost = 6, Type = "Rifle", WU = 4},
-	weapon_acf_m1carbine    = {Name = "M1 Carbine",Cost = 5, Type = "Rifle", WU = 2.5},
-	weapon_acf_m4a1         = {Name = "M4A1",Cost = 0, Type = "Rifle", WU = 3},
-	weapon_acf_mp40         = {Name = "MP40",Cost = 0, Type = "Rifle", WU = 5},
-	weapon_acf_mp44         = {Name = "MP44",Cost = 6, Type = "Rifle", WU = 4},
-	weapon_acf_sg552        = {Name = "SG552",Cost = 10, Type = "Rifle", WU = 4.5},
+local WeaponsList = {}
+for k,v in pairs(weapons.GetList()) do
+	WeaponsList[v.ClassName] = true
+end
 
-	-- ELL EMM GEES
-	weapon_acf_bar          = {Name = "M1918 BAR",Cost = 10, Type = "LMG", WU = 6},
-	weapon_acf_m249         = {Name = "M249",Cost = 12, Type = "LMG", WU = 6},
-	weapon_acf_30cal        = {Name = "M1919 Browning LMG",Cost = 14, Type = "LMG", WU = 8},
-	weapon_acf_mg42         = {Name = "MG42",Cost = 16, Type = "LMG", WU = 8},
+NewPlyManager.Weapons	= {}
+NewPlyManager.Gadgets	= {}
+NewPlyManager.KitList	= {}
 
-	-- SMIGS
-	weapon_acf_m1thompson   = {Name = "M1 Thompson",Cost = 4, Type = "SMG", WU = 3},
-	weapon_acf_mp5          = {Name = "MP5",Cost = 4, Type = "SMG", WU = 3},
-	weapon_acf_p90          = {Name = "P90",Cost = 6, Type = "SMG", WU = 4.5},
-	weapon_acf_ump45        = {Name = "UMP45",Cost = 4, Type = "SMG", WU = 3.5},
+local function RegisterWeapon(Class, Name, Type, Cost, WU)
+	NewPlyManager.Weapons[Class]	= {Name = Name, Type = Type, Cost = Cost, WU = WU}
+end
+local function RegisterGadget(Class, Name, Type, Cost, WU)
+	NewPlyManager.Gadgets[Class]	= {Name = Name, Type = Type, Cost = Cost, WU = WU}
+end
+local function DefineKit(Name, KitTable)	-- Name of the kit as defined by type "Kit" and Name in RegisterGadget
+	NewPlyManager.KitList[Name]		= KitTable
+end
 
-	-- PISTOLOS
-	weapon_acf_c96          = {Name = "C96",Cost = 4, Type = "Pistol", WU = 2.5},
-	weapon_acf_deagle       = {Name = "Desert Eagle",Cost = 8, Type = "Pistol", WU = 3},
-	weapon_acf_57           = {Name = "Five-SeveN",Cost = 0, Type = "Pistol", WU = 0.5},
-	weapon_acf_glock        = {Name = "Glock 18",Cost = 5, Type = "Pistol", WU = 1.5},
-	weapon_acf_colt         = {Name = "M1911",Cost = 3, Type = "Pistol", WU = 1.5},
-	weapon_acf_p38          = {Name = "P38",Cost = 0, Type = "Pistol", WU = 1},
-	weapon_acf_usp          = {Name = "USP",Cost = 0, Type = "Pistol", WU = 1},
-	weapon_acf_357magnum    = {Name = ".357 Magnum",Cost = 4, Type = "Pistol", WU = 2.5},
+--	Rifles
+RegisterWeapon("weapon_acf_m4a1", "M4A1", "Rifle", 0, 3)
+RegisterWeapon("weapon_acf_ak47", "AK47", "Rifle", 0, 3.5)
+RegisterWeapon("weapon_acf_aug", "AUG", "Rifle", 6, 4)
+RegisterWeapon("weapon_acf_famas", "Famas", "Rifle", 6, 4)
+RegisterWeapon("weapon_acf_galil", "Galil", "Rifle", 8, 5)
+RegisterWeapon("weapon_acf_garand", "M1 Garand", "Rifle", 6, 5.5)
+RegisterWeapon("weapon_acf_kar98k", "Kar98k", "Rifle", 6, 5)
+RegisterWeapon("weapon_acf_m1carbine", "M1 Carbine", "Rifle", 5, 3)
+RegisterWeapon("weapon_acf_mp40", "MP40", "Rifle", 0, 4)
+RegisterWeapon("weapon_acf_mp44", "MP44", "Rifle", 6, 4.5)
+RegisterWeapon("weapon_acf_sg552", "SG552", "Rifle", 8, 4.5)
 
-	-- SNOIPAHS
-	weapon_acf_g3sg1        = {Name = "G3SG1",Cost = 12, Type = "Sniper", WU = 6},
-	weapon_acf_sg550        = {Name = "SG550",Cost = 12, Type = "Sniper", WU = 6},
-	weapon_acf_scout        = {Name = "Scout",Cost = 10, Type = "Sniper", WU = 3},
-	weapon_acf_amr          = {Name = "Anti-Material Rifle",Cost = 35, Type = "Sniper", WU = 15},
-	weapon_acf_kar98kscoped = {Name = "Kar98K (Scoped)",Cost = 8, Type = "Sniper", WU = 6},
-	weapon_acf_lapua        = {Name = "Lapua",Cost = 20, Type = "Sniper", WU = 7.5},
-	weapon_acf_springfield  = {Name = "M1903 Springfield",Cost = 8, Type = "Sniper", WU = 6},
-	weapon_acf_crossbow     = {Name = "Rebar Crossbow",Cost = 15, Type = "Sniper", WU = 4},
-}
-NewPlyManager.Gadgets = {
-	-- ROGGETS
-	weapon_acf_bazooka      = {Name = "M3 Bazooka",Cost = 25, Type = "Launcher", WU = 12},
-	weapon_acf_panzerschreck = {Name = "Panzerschrek",Cost = 40, Type = "Launcher", WU = 18},
+--	LMGs
+RegisterWeapon("weapon_acf_bar", "M1918 BAR", "LMG", 10, 7)
+RegisterWeapon("weapon_acf_m249", "M249 Para", "LMG", 12, 6)
+RegisterWeapon("weapon_acf_30cal", "M1919 Browning LMG", "LMG", 14, 9)
+RegisterWeapon("weapon_acf_mg42", "MG42", "LMG", 16, 9.5)
 
-	toolkit                 = {Name = "Toolkit",Cost = 25,Type = "Kit", WU = 5},
-	medkit                  = {Name = "Medkit",Cost = 0,Type = "Kit", WU = 5},
+--	SMGs
+RegisterWeapon("weapon_acf_m1thompson", "M1 Thompson", "SMG", 4, 3)
+RegisterWeapon("weapon_acf_mp5", "MP5", "SMG", 4, 3)
+RegisterWeapon("weapon_acf_p90", "P90", "SMG", 6, 4.5)
+RegisterWeapon("weapon_acf_ump45", "UMP45", "SMG", 4, 3.5)
 
-	acf_torch               = {Name = "ACF Torch",Cost = 10,Type = "Torch", WU = 2}
-}
-NewPlyManager.KitList = {
-	toolkit                 = {"gmod_tool","weapon_physgun"},
-	medkit                  = {"weapon_medkit"}
-}
+--	Pistols
+RegisterWeapon("weapon_acf_c96", "C96", "Pistol", 4, 2)
+RegisterWeapon("weapon_acf_deagle", "Desert Eagle", "Pistol", 8, 3.5)
+RegisterWeapon("weapon_acf_57", "Five-SeveN", "Pistol", 0, 1)
+RegisterWeapon("weapon_acf_glock", "Glock 18", "Pistol", 5, 1.5)
+RegisterWeapon("weapon_acf_colt", "M1911", "Pistol", 0, 1.5)
+RegisterWeapon("weapon_acf_p38", "P38", "Pistol", 0, 1)
+RegisterWeapon("weapon_acf_usp", "USP", "Pistol", 0, 1)
+RegisterWeapon("weapon_acf_357magnum", ".357 Magnum", "Pistol", 4, 2.5)
+
+--	Snipers
+RegisterWeapon("weapon_acf_g3sg1", "G3SG1", "Sniper", 12, 7)
+RegisterWeapon("weapon_acf_sg550", "SG550", "Sniper", 12, 6)
+RegisterWeapon("weapon_acf_scout", "Scout", "Sniper", 10, 5)
+RegisterWeapon("weapon_acf_amr", "Anti-Material Rifle", "Sniper", 35, 24)
+RegisterWeapon("weapon_acf_kar98kscoped", "Kar98k (Scoped)", "Sniper", 8, 6)
+RegisterWeapon("weapon_acf_lapua", "Lapua", "Sniper", 20, 8)
+RegisterWeapon("weapon_acf_springfield", "M1903 Springfield", "Sniper", 8, 6.5)
+RegisterWeapon("weapon_acf_crossbow", "Rebar Crossbow", "Sniper", 15, 7)
+
+DefineKit("toolkit", {"weapon_physgun", "gmod_tool"})
+DefineKit("medkit", {"weapon_medkit"})
+
+RegisterGadget("weapon_acf_bazooka", "M3 Bazooka", "Launcher", 30, 18)
+RegisterGadget("weapon_acf_panzerschreck", "Panzerschrek", "Launcher", 40, 28)
+
+RegisterGadget("toolkit", "Toolkit", "Kit", 0, 10)
+RegisterGadget("medkit", "Medkit", "Kit", 0, 5)
+
+RegisterGadget("acf_torch", "ACF Torch", "Torch", 0, 5)
+--RegisterGadget("acf_heavytorch", "ACF Heavy Torch", "Torch", 10, 15)
 
 -- name = {max = 7 (default, full magazines)
 NewPlyManager.AmmoExceptions = {
@@ -82,10 +97,10 @@ NewPlyManager.AmmoExceptions = {
 	weapon_acf_m249 = {max = 4},
 
 	weapon_acf_grenadelauncher = {max = 3},
-	weapon_acf_panzerschreck = {max = 2},
-	weapon_acf_bazooka = {max = 2},
+	weapon_acf_panzerschreck = {max = 1},
+	weapon_acf_bazooka = {max = 1},
 
-	weapon_acf_amr = {max = 9},
+	weapon_acf_amr = {max = 4},
 	weapon_acf_crossbow = {max = 9},
 }
 
@@ -104,12 +119,12 @@ NewPlyManager.DefaultLoadout = {
 	Armor = 25,
 	Primary = "weapon_acf_m4a1",
 	Sidearm = "weapon_acf_usp",
-	Gadget1 = "",
+	Gadget1 = "toolkit",
 	Gadget2 = ""
 }
 
-NewPlyManager.BaseMoveSpeed = 250
-NewPlyManager.MinMoveSpeed = 90
+NewPlyManager.BaseMoveSpeed = 200
+NewPlyManager.MinMoveSpeed = 75
 
 if SERVER then
 	local function AmmoDiff(ply,weapon)
@@ -132,7 +147,7 @@ if SERVER then
 		return (NewPlyManager.AmmoCost[AmmoType] or 0.1) * Diff
 	end
 
-	function NewPlyManager.ChargeAmmo(Ply,Free,Quiet)
+	function NewPlyManager.ChargeAmmo(Ply, Free, Quiet)
 		local maxlist = {}
 		local Weapons = Ply:GetWeapons()
 
@@ -303,13 +318,15 @@ if SERVER then
 		self:SetMaxHealth(100)
 		self:SetHealth(100)
 
-		local LoadoutData = NewPlyManager.BuildLoadout(self.OldLoadout,self.PlayerLoadout)
+		local LoadoutData = NewPlyManager.BuildLoadout(self.OldLoadout, self.PlayerLoadout)
 
-		local Pass = AAS.Funcs.ChargeRequisition(self,LoadoutData.cost,"Loadout cost")
+		local Pass = AAS.Funcs.ChargeRequisition(self,LoadoutData.cost, "Loadout cost")
+
+		self:SetNW2Int("AAS.LoadoutCost", LoadoutData.cost or 0)
 
 		if not Pass then
-			aasMsg({Colors.BadCol,"You can't afford your loadout! Giving default loadout... (your loadout is still saved)"},self)
-			LoadoutData = NewPlyManager.BuildLoadout(table.Copy(NewPlyManager.DefaultLoadout),table.Copy(NewPlyManager.DefaultLoadout))
+			aasMsg({Colors.BadCol, "You can't afford your loadout! Giving default loadout... (your loadout is still saved)"}, self)
+			LoadoutData = NewPlyManager.BuildLoadout(table.Copy(NewPlyManager.DefaultLoadout), table.Copy(NewPlyManager.DefaultLoadout))
 		end
 
 		for k,v in pairs(LoadoutData.give) do
@@ -355,12 +372,58 @@ if SERVER then
 	function GM:PlayerSetHandsModel(pl,ent)
 		local simplemodel = player_manager.TranslateToPlayerModelName(pl:GetModel())
 		local info = player_manager.TranslatePlayerHands(simplemodel)
+
 		if info then
 			ent:SetModel(info.model)
 			ent:SetSkin(info.skin)
 			ent:SetBodyGroups(info.body)
 		end
 	end
+
+	AAS.Funcs.GetTeamInfo	= function(index)
+		return AAS.State.Team[index == 2 and "OPFOR" or "BLUFOR"]
+	end
+
+	-- Replaces the player's default gmod loadout with whatever they want, if they can afford it, otherwise load the server default loadout
+	hook.Add("PlayerLoadout","OverrideLoadout",function(ply)
+		ply:ApplyLoadout()
+
+		--ply:SetModel(ModelList[math.random(1,#ModelList)] or "models/Humans/Group03/male_02.mdl")
+
+		if GetGlobalBool("EditMode",false) == true then -- give basic tooling to aid in map creation
+			ply:Give("weapon_physgun")
+			ply:Give("gmod_tool")
+		end
+
+		if not AAS.State.Team then return true end
+
+		local TeamData	= AAS.Funcs.GetTeamInfo(ply:Team())
+
+		ply:SetPlayerColor(TeamData.Color / 255)
+
+		if ply:GetNW2Int("KnownRound",0) ~= AAS.RoundCounter then
+			local msg = {Colors.BasicCol, "We're on round " .. AAS.RoundCounter .. "! "}
+
+			local TeamA	= AAS.Funcs.GetTeamInfo(1)
+			local TeamAWins = team.GetScore(1)
+			local TeamB	= AAS.Funcs.GetTeamInfo(2)
+			local TeamBWins = team.GetScore(2)
+
+			if TeamAWins > 0 and TeamBWins == 0 then
+				table.Add(msg, {TeamA.Color, TeamA.Name, Colors.BasicCol, " just needs to win again!"})
+			elseif TeamBWins > 0 and TeamAWins == 0 then
+				table.Add(msg, {TeamB.Color, TeamB.Name, Colors.BasicCol, " just needs to win again!"})
+			elseif TeamAWins > 0 and TeamBWins > 0 then
+				table.Add(msg, {"This should be a tie-breaker!"})
+			end
+
+			aasMsg(msg,ply)
+
+			ply:SetNW2Int("KnownRound",AAS.RoundCounter)
+		end
+
+		return true
+	end)
 else
 	local Loadout = {}
 
@@ -582,6 +645,7 @@ else
 		end
 		InfoPanel:CalcInfo()
 
+		local MaxReq = AAS.Funcs.GetSetting("Max Requisition", 500)
 		local MovespeedDiff = NewPlyManager.BaseMoveSpeed - NewPlyManager.MinMoveSpeed
 		InfoPanel.Paint = function(self,w,h)
 			surface.SetDrawColor(75,75,75,255)
@@ -598,9 +662,9 @@ else
 			surface.DrawRect(0,93,w,16)
 
 			surface.SetDrawColor(0,255,0,255)
-			surface.DrawRect(1,21,(w - 2) * (LP:GetNW2Int("Requisition",0) / AAS.MaxRequisition),14)
+			surface.DrawRect(1,21,(w - 2) * (LP:GetNW2Int("Requisition",0) / MaxReq),14)
 			surface.SetDrawColor(255,0,0,255)
-			surface.DrawRect(1,28,(w - 2) * (self.Cost / AAS.MaxRequisition),7)
+			surface.DrawRect(1,28,(w - 2) * (self.Cost / MaxReq),7)
 
 			local Mix = math.max(0,self.Movespeed - NewPlyManager.MinMoveSpeed) / MovespeedDiff
 			local Color1 = Vector(255,0,0)

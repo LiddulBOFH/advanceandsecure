@@ -1,70 +1,272 @@
 MsgN("+ Map system loaded")
 
-local ST = SysTime
+local ST		= SysTime
 
-AAS.RAASLookup = {}
-AAS.RAASFinished = false
-
-local PointValues = {"PointName","IsSpawn","TeamSpawn"}
-
-local function aas_SetEditMode(bool)
+AAS.Funcs.SetEditMode = function(bool)
 	SetGlobalBool("EditMode",bool)
 
 	aasMsg({Colors.BasicCol,"Game Editmode has been set to ",tostring(GetGlobalBool("EditMode",false)),"."})
 
-	for k,v in ipairs(ents.FindByClass("aas_spawnpoint")) do
-		v:AddEFlags(EFL_FORCE_CHECK_TRANSMIT)
+	if bool == true then
+		for k,v in player.Iterator() do
+			if v:IsSuperAdmin() then v:Give("gmod_tool") v:Give("weapon_physgun") end
+		end
 	end
 
-	for k,v in ipairs(ents.FindByClass("aas_prop")) do
-		v:SetEditable(bool)
+	if not AAS.SuppressReload then AAS.SuppressReload = false timer.Simple(0,AAS.Funcs.ReloadGamemode) end
+end
+
+AAS.Funcs.ResetPlayer	= function(ply)
+	ply.FirstSpawn	= true
+	ply:SetFrags(0)
+	ply:SetDeaths(0)
+
+	ply:SetNW2Int("Karma",0)
+	ply:SetNW2Int("Requisition",0)
+	ply:SetNW2Int("UsedRequisition",0)
+
+	ply:StripWeapons()
+	ply:RemoveAllAmmo()
+end
+
+AAS.Funcs.Reset = function(Bypass)
+	AAS.State	= {
+		Mode	= AAS.ModeCV:GetString(),
+		Active	= false,
+		Data	= {},
+		Team	= {},
+	}
+
+	SetGlobalBool("AAS.Voting",false)
+
+	for _, v in player.Iterator() do
+		if AAS.RoundCounter == 1 then v:SetNW2Int("KnownRound",0) end
+
+		v:SetNW2Int("Karma",0)
+		v:SetNW2Int("Requisition",0)
+		v:SetNW2Int("UsedRequisition",0)
+		v:SetNW2Bool("InSafezone",true)
+		v:UnLock()
+
+		v.DeathCountdown	= nil
+		v.PlayerLoadout		= nil
+
+		v.NextTeamSwitch	= ST()
+		v.NextPay			= ST() + 1
+		v.FirstSpawn		= true
 	end
-end
-AAS.Funcs.SetEditMode = aas_SetEditMode
 
-local function sendRAAS(ply) -- pass nil to broadcast
-	if not AAS.RAASFinished then return end
-
-	net.Start("AAS.RAASLine")
-		net.WriteTable(AAS.RAASLine)
-		net.WriteTable(AAS.PointAlias)
-	if ply == nil then
-		net.Broadcast()
-		MsgN("AAS: Broadcasting points!")
-	else
-		net.Send(ply)
-		MsgN("AAS: Sending points to " .. ply:Nick())
-	end
-end
-AAS.Funcs.sendRAAS = sendRAAS
-
-local function aas_UpdateTeamData(ply)
-	net.Start("AAS.UpdateTeamData")
-		net.WriteTable(AAS.TeamData)
-	if ply == nil then net.Broadcast() else net.Send(ply) end
-end
-AAS.Funcs.updateTeamData = aas_UpdateTeamData
-
-local function haltMap()
-	AAS.Funcs.SetEditMode(true)
+	if not Bypass then AAS.Funcs.UpdateState() end
 end
 
-local function deepReset() -- Used incase the vote at match end results in a reset of the current map
+AAS.Funcs.DeepReset = function()
 	AAS.RoundCounter = 1
-	AAS.TeamWins = {0,0}
+	team.SetScore(1,0)
+	team.SetScore(2,0)
 	AAS.Halt = false
 	AAS.Voting = false
 	AAS.RTV = false
 	PreMapList = {}
 
-	SetGlobalBool("AAS.Voting",AAS.Voting)
+	AAS.Funcs.Reset()
 
-	local players = player.GetAll()
-	for _,v in ipairs(players) do
-		v:UnSpectate(OBS_MODE_NONE)
+	for _,v in player.Iterator() do
+		v:UnSpectate()
 	end
 end
-AAS.Funcs.deepReset = deepReset
+
+local PointVariables = {"PointName", "IsSpawn", "TeamSpawn"}
+AAS.Funcs.SaveMap	= function()
+	local Data	= {}
+	Data.Team	= {}
+	Data.Spawns	= {}
+	Data.Points	= {}
+	Data.Props	= {}
+	Data.Data	= {}
+	Data.Settings	= {}
+
+	for k,v in pairs(AAS.GM.Settings) do
+		Data.Settings[k] = v.value
+	end
+
+	local Points	= ents.FindByClass("aas_point")
+	local Spawns	= ents.FindByClass("aas_spawnpoint")
+	local Props		= ents.FindByClass("aas_prop")
+
+	if next(Points) ~= nil then
+		for _, point in pairs(Points) do
+			local Pos = point:GetPos()
+			local Ang = point:GetAngles()
+			local NWVars = point:GetNetworkVars()
+
+			local PointData	= {
+				pos = Vector(math.Round(Pos.x), math.Round(Pos.y), math.Round(Pos.z)),
+				ang = Angle(0, math.Round(Ang.y), 0)
+			}
+
+			for _, val in ipairs(PointVariables) do
+				PointData[val] = NWVars[val]
+			end
+
+			table.insert(Data.Points, PointData)
+		end
+	else
+		MsgN("[AAS] No points detected! Aborting")
+		return
+	end
+
+	if next(Spawns) ~= nil then
+		for _, spawn in pairs(Spawns) do
+			local Pos = spawn:GetPos()
+			local Ang = spawn:GetAngles()
+
+			table.insert(Data.Spawns, {
+				pos = Vector(math.Round(Pos.x), math.Round(Pos.y), math.Round(Pos.z)),
+				ang = Angle(0, math.Round(Ang.y), 0)
+			})
+		end
+	else
+		MsgN("[AAS] No spawn points detected! Aborting")
+		return
+	end
+
+	if next(Props) ~= nil then
+		for _, prop in pairs(Props) do
+			local PropData = {
+				pos = prop:GetPos(),
+				ang = prop:GetAngles(),
+				mdl = prop:GetModel()
+			}
+
+			local col = prop:GetColor()
+
+			PropData.col = Vector(col.r, col.g, col.b)
+			PropData.alpha = col.a
+
+			if prop:GetMaterial() ~= "" then
+				PropData.mat = prop:GetMaterial()
+			end
+
+			table.insert(Data.Props, PropData)
+		end
+	end
+
+	-- Call the gamemode specific save function, for any extra data that may be required
+	if AAS.GM.Save(Data) == false then return end
+
+	local Map	= string.lower(game.GetMap())
+	local MapFile	= "aas/maps/" .. Map .. "/" .. AAS.ModeCV:GetString() .. ".txt"
+	MsgN("[AAS] Saving to '" .. MapFile .. "'")
+
+	file.Write(MapFile, util.TableToJSON(Data))
+end
+
+local removeExtra = {"item_ammo_crate"}
+AAS.Funcs.LoadMap	= function(MapData)
+	AAS.Funcs.ClearHooks()
+	print("[AAS] Loading!")
+	game.CleanUpMap( false, { "env_fire", "entityflame", "_firesmoke" } )
+
+	for _,itemType in ipairs(removeExtra) do
+		local items = ents.FindByClass(itemType)
+		for _,item in ipairs(items) do
+			item:Remove()
+		end
+	end
+
+	AAS.State.Alias = {}
+	AAS.State.AliasLookup	= {}
+	AAS.Spawnpoints = {[1] = {}, [2] = {}}
+
+	for _, pointdata in pairs(MapData.Points) do
+		local point = ents.Create("aas_point")
+		point:SetPos(pointdata.pos)
+		point:SetAngles(pointdata.ang)
+		point:Spawn()
+
+		point:SetPointName(pointdata.PointName)
+		point:SetTeamSpawn(pointdata.TeamSpawn)
+		point:SetIsSpawn(pointdata.IsSpawn)
+
+		AAS.State.Alias[pointdata.PointName] = point
+		AAS.State.AliasLookup[point] = pointdata.PointName
+	end
+
+	for _, spawndata in pairs(MapData.Spawns) do
+		local spawn = ents.Create("aas_spawnpoint")
+		spawn:SetPos(spawndata.pos)
+		spawn:SetAngles(spawndata.ang)
+		spawn:Spawn()
+	end
+
+	if next(MapData.Props) ~= nil then
+		for _, propdata in pairs(MapData.Props) do
+			local prop = ents.Create("aas_prop")
+			prop:SetPos(propdata.pos)
+			prop:SetAngles(propdata.ang)
+			prop:Spawn()
+			prop:SetModel(propdata.mdl)
+
+			prop:SetMaterial(propdata.mat or "")
+			local color = Color(propdata.col.x, propdata.col.y, propdata.col.z)
+			color.a = propdata.alpha
+			prop:SetColor(color)
+		end
+	end
+
+	timer.Simple(0.5, function()
+		local SpawnA, SpawnB
+
+		for _, v in ipairs(ents.FindByClass("aas_point")) do
+			if v:GetIsSpawn() then
+				if v:GetTeamSpawn() == 1 and not SpawnA then
+					print("Located SpawnA")
+					SpawnA = v
+				elseif v:GetTeamSpawn() == 2 and not SpawnB then
+					print("Located SpawnB")
+					SpawnB = v
+				end
+			end
+
+			v:SetCapture(0)
+
+			v:SetForceUpdate(not v:GetForceUpdate())
+		end
+
+		if not (IsValid(SpawnA) and IsValid(SpawnB)) then
+			ErrorNoHalt("Unable to locate both spawns!")
+			return
+		end
+
+		for _,v in ipairs(ents.FindByClass("aas_spawnpoint")) do
+			local pos	= v:GetPos()
+			local D1	= pos:DistToSqr(SpawnA:GetPos())
+			local D2	= pos:DistToSqr(SpawnB:GetPos())
+
+			if D1 < D2 then table.insert(AAS.Spawnpoints[1],v) else table.insert(AAS.Spawnpoints[2],v) end
+		end
+
+		AAS.Funcs.UpdateState()
+
+		if not GetGlobalBool("EditMode", false) then
+			timer.Simple(0.5, function()
+				for _, ply in player.Iterator() do
+					AAS.Funcs.ResetPlayer(ply)
+					ply:Spawn()
+				end
+			end)
+		end
+	end)
+
+	if GetGlobalBool("EditMode",false) then
+		aasMsg({Colors.ErrorCol,"The game has been loaded with EditMode enabled!"})
+	end
+
+	-- Call the gamemode specific load function, incase theres anything extra
+	AAS.GM.Load(MapData)
+end
+
+--[[
 
 local function ValidPoints(Pos,Target,UsedList,CurList) -- Returns top 3 choices, sorted by distance
 	local Points = ents.FindByClass("aas_point")
@@ -236,245 +438,4 @@ local function aliasPoints()
 	else RAASConnect() end -- Goes ahead with normal random behavior
 end
 
-local removeExtra = {"item_ammo_crate"}
-local function loadMap(InputData)
-	MsgN("AAS: Reloading the map!")
-
-	game.CleanUpMap( false, { "env_fire", "entityflame", "_firesmoke" } )
-
-	for _,itemType in ipairs(removeExtra) do
-		local items = ents.FindByClass(itemType)
-		for _,item in ipairs(items) do
-			item:Remove()
-		end
-	end
-
-	AAS.Funcs.CalcRequisition()
-
-	for k,v in ipairs(InputData["points"]) do -- TODO: fix broken sync (1/29/2023 note: I forgot what was not getting synced, but everything seems to be working fine, I will leave this until I know for sure)
-		local point = ents.Create("aas_point")
-		point:SetPos(v.pos)
-		point:SetAngles(v.ang)
-		point:Spawn()
-
-		point.ExtraData = {PointName = v.PointName,IsSpawn = v.IsSpawn,TeamSpawn = v.TeamSpawn}
-
-		point:SetPointName("")
-		point:SetTeamSpawn(1)
-		point:SetIsSpawn(false)
-	end
-
-	for k,v in ipairs(InputData["spawns"]) do
-		local point = ents.Create("aas_spawnpoint")
-		point:SetPos(v.pos)
-		point:SetAngles(v.ang)
-		point:Spawn()
-	end
-
-	if InputData["props"] then
-		for k,v in ipairs(InputData["props"]) do
-			local prop = ents.Create("aas_prop")
-			prop:SetPos(v.pos)
-			prop:SetAngles(v.ang)
-			prop:Spawn()
-			prop:SetModel(v.mdl)
-		end
-	end
-
-	if InputData["manual"] then
-		AAS.ManualLink = InputData["manual"]
-		--PrintTable(AAS.ManualLink)
-	end
-
-	SetGlobalBool("IsNonLinear",InputData["properties"].NonLinear or false)
-	AAS.NonLinear = GetGlobalBool("IsNonLinear",false)
-
-	AAS.CurrentProperties = InputData["properties"]
-	SetGlobalInt("MaxRequisition",AAS.CurrentProperties.MaxRequisition)
-
-	AAS.TeamData[1].Tickets = AAS.CurrentProperties.StartTickets
-	AAS.TeamData[2].Tickets = AAS.CurrentProperties.StartTickets
-
-	if AAS.CurrentProperties.ChangedAlias or false then
-		AAS.TeamData[1].Name    = AAS.CurrentProperties.Alias[1].Name
-		AAS.TeamData[2].Name    = AAS.CurrentProperties.Alias[2].Name
-
-		local ColA = AAS.CurrentProperties.Alias[1].Color
-		local ColB = AAS.CurrentProperties.Alias[2].Color
-
-		AAS.TeamData[1].Color   = Color(ColA.r,ColA.g,ColA.b)
-		AAS.TeamData[2].Color   = Color(ColB.r,ColB.g,ColB.b)
-	else
-		AAS.TeamData[1].Name    = AAS.DefaultProperties.Alias[1].Name
-		AAS.TeamData[2].Name    = AAS.DefaultProperties.Alias[2].Name
-
-		AAS.TeamData[1].Color   = AAS.DefaultProperties.Alias[1].Color
-		AAS.TeamData[2].Color   = AAS.DefaultProperties.Alias[2].Color
-	end
-
-	team.SetColor(1,AAS.TeamData[1].Color)
-	team.SetColor(2,AAS.TeamData[2].Color)
-
-	timer.Simple(0.1,function() -- Fixes weird clientside sync issue caused by immediately setting these variables when the entity is made
-		for k,v in ipairs(ents.FindByClass("aas_point")) do
-			local D = v.ExtraData
-			v:SetPointName(D.PointName)
-			v:SetTeamSpawn(D.TeamSpawn)
-			v:SetIsSpawn(D.IsSpawn)
-			v.ExtraData = nil
-		end
-
-		aliasPoints()
-
-		for k,v in ipairs(ents.FindByClass("aas_point")) do
-			if AAS.RAASFinished and (not GetGlobalBool("EditMode",false)) and not AAS.RAASLookup[v] then
-				v:Remove()
-			end
-		end
-
-		timer.Simple(0.5,function()
-			AAS.Funcs.sendRAAS()
-			AAS.Funcs.updateTeamData()
-
-			--NavGen:Init()
-
-			if GetGlobalBool("EditMode",false) == false then
-				for k,v in ipairs(player.GetAll()) do
-					v.FirstSpawn = true
-					v:StripWeapons()
-					v:StripAmmo()
-					v:Spawn()
-				end
-			end
-		end)
-	end)
-
-	if GetGlobalBool("EditMode",false) then
-		aasMsg({Colors.ErrorCol,"The game has been loaded with EditMode enabled!"})
-	end
-end
-AAS.Funcs.loadMap = loadMap
-
-local function setupMap()
-	local Map = string.lower(game.GetMap())
-	MsgN("AAS: Attempting to load " .. Map .. "...")
-
-	--game.CleanUpMap( false, { "env_fire", "entityflame", "_firesmoke" } )
-
-	AAS.RAASFinished = false
-	SetGlobalBool("AAS.Voting",false)
-
-	for k,v in ipairs(player.GetAll()) do
-		if AAS.RoundCounter == 1 then v:SetNW2Int("KnownRound",0) end
-		v:SetNW2Int("Karma",0)
-		v:SetNW2Int("Requisition",0)
-		v:SetNW2Int("UsedRequisition",0)
-		v:SetNW2Bool("InSafezone",true)
-		v:UnLock()
-		v.DeathCountdown = nil
-		v.PlayerLoadout = nil
-
-		v.NextPay = ST()
-	end
-
-	if file.Exists("aas/maps/" .. Map .. ".txt","DATA") then
-		local Data = util.JSONToTable(file.Read("aas/maps/" .. Map .. ".txt","DATA"))
-
-		if Data == "" then MsgN("AAS: Missing data!") return end
-
-		if not Data.properties.Alias[1].Name then
-			print("Missing name for Team A")
-			Data.properties.Alias[1].Name = "BLUFOR"
-		end
-
-		if not Data.properties.Alias[2].Name then
-			print("Missing name for Team B")
-			Data.properties.Alias[2].Name = "OPFOR"
-		end
-
-		if table.IsEmpty(Data.points) then
-			MsgN("Missing points! Setting to edit mode...")
-			haltMap()
-			return
-		elseif table.IsEmpty(Data.spawns) then
-			MsgN("Missing spawns! Setting to edit mode...")
-			haltMap()
-			return
-		end
-
-		AAS.Funcs.loadMap(Data)
-	else
-		MsgN("No Data, setting to edit mode...")
-		AAS.CurrentProperties = table.Copy(AAS.DefaultProperties)
-		AAS.Funcs.SetEditMode(true)
-	end
-end
-AAS.Funcs.setupMap = setupMap
-
-local function saveMap()
-	local Map = string.lower(game.GetMap())
-	local Data = {}
-
-	Data["spawns"] = {}
-	Data["points"] = {}
-	Data["props"] = {}
-	if not AAS.CurrentProperties then AAS.CurrentProperties = table.Copy(AAS.DefaultProperties) end
-	Data["properties"] = table.Copy(AAS.CurrentProperties)
-
-	local Spawns = ents.FindByClass("aas_spawnpoint")
-	local Points = ents.FindByClass("aas_point")
-
-	local Props = ents.FindByClass("aas_prop")
-
-	for k,v in ipairs(Spawns) do
-		local Pos = v:GetPos()
-		local Ang = v:GetAngles()
-		Data["spawns"][#Data["spawns"] + 1] = {
-			pos = Vector(math.Round(Pos.x),math.Round(Pos.y),math.Round(Pos.z)),
-			ang = Angle(0,math.Round(Ang.y),0)
-		}
-	end
-
-	for k,v in ipairs(Points) do
-		local Pos = v:GetPos()
-		local Ang = v:GetAngles()
-		local NWVars = v:GetNetworkVars()
-		local Index = #Data["points"]
-		Data["points"][Index + 1] = {
-			pos = Vector(math.Round(Pos.x),math.Round(Pos.y),math.Round(Pos.z)),
-			ang = Angle(0,math.Round(Ang.y),0)
-		}
-		for k2,v2 in ipairs(PointValues) do
-			Data["points"][Index + 1][v2] = NWVars[v2]
-		end
-	end
-
-	if #Props then
-		for k,v in ipairs(Props) do
-			local Pos = v:GetPos()
-			local Ang = v:GetAngles()
-			local Mdl = v:GetModel()
-
-			Data["props"][#Data["props"] + 1] = {
-				pos = Pos,
-				ang = Ang,
-				mdl = Mdl
-			}
-		end
-	end
-
-	if AAS.ManualLink then
-		print("We got a manual link!")
-		Data["manual"] = AAS.ManualLink
-	end
-
-	MsgN("Saving to " .. Map .. "...")
-	PrintTable(Data)
-	local File = util.TableToJSON(Data)
-	file.Write("aas/maps/" .. Map .. ".txt",File)
-end
-AAS.Funcs.saveMap = saveMap
-
-function GM:InitPostEntity()
-	AAS.Funcs.setupMap()
-end
+]]

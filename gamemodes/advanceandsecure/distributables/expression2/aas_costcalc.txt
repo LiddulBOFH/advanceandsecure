@@ -85,7 +85,7 @@ function number calcCost(E:entity){
         case "primitive_shape", Cost = 0.1 + max(0.01,E:mass() / 500) break,
         case "gmod_wire_gate", Cost = 0.1 + max(0.01,E:mass() / 500) break,
         case "acf_engine",
-            Cost = max(5,E:acfMaxTorque() / 100)
+            Cost = max(5,(E:acfMaxTorque() / 160) + (E:acfMaxPower() / 80))
         break,
         case "acf_rack",
             if(AASCostInfo["SpecialModelFilter",table]:exists(E:model())){Cost = AASCostInfo["SpecialModelFilter",table][E:model(),number]}else{Cost = 10}
@@ -113,10 +113,6 @@ function number calcCost(E:entity){
         case "acf_radar",
             if(AASCostInfo["ACFRadars",table]:exists(E:acfNameShort())){Cost = AASCostInfo["ACFRadars",table][E:acfNameShort(),number]}
             else{Cost = 50}
-        break,
-        case "acf_turret",
-            local TD = E:acfGetTurretData()
-            Cost = 1 + (TD["RingSize",number] / 6)
         break,
         case "acf_turret_gyro",
             Cost = E:acfIsGyroDual() ? 8 : 4
