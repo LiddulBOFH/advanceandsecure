@@ -83,8 +83,6 @@ do  -- Stuff to organize
 					end
 				end
 			end
-
-			print("[AAS] Received state update!")
 		end)
 
 		net.Receive("AAS.UpdateTickets", function()
