@@ -1,6 +1,6 @@
 MsgN("+ Vote system loaded")
 
-local ST = SysTime
+local CT = CurTime
 
 if SERVER then
 	AAS.Voting = false
@@ -74,7 +74,7 @@ if SERVER then
 		]]--
 
 		net.Start("AAS.OpenVotes")
-			net.WriteFloat(ST() + 7.5)
+			net.WriteFloat(CT() + 7.5)
 			net.WriteBool(AAS.RTV)
 			net.WriteTable(Choices)
 		net.Broadcast()
@@ -177,7 +177,7 @@ else	-- Cient
 			surface.DrawRect(0,0,w,36)
 
 			draw.SimpleText("MAP VOTING","BasicFontLarge",w / 2,10,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_TOP)
-			local TimeLeft = math.Clamp(math.Round(Time - ST(),1),0,30)
+			local TimeLeft = math.Clamp(math.Round(Time - CT(),1),0,30)
 
 			if TimeLeft < 10 then surface.SetDrawColor(200,0,0) else surface.SetDrawColor(0,200,0) end
 			surface.DrawRect(0,h - 12,w * (TimeLeft / 30),12)
@@ -211,7 +211,7 @@ else	-- Cient
 				draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 			end
 			button.DoClick = function(self)
-				if math.Clamp(math.Round(Time - ST(),1),0,30) == 0 then VotePanel:Remove() return end
+				if math.Clamp(math.Round(Time - CT(),1),0,30) == 0 then VotePanel:Remove() return end
 				if not GetGlobalBool("AAS.Voting",false) then return end
 				selected = self.Index
 				SendVote(self.Index)
@@ -244,7 +244,7 @@ else	-- Cient
 				draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 			end
 			button.DoClick = function(self)
-				if math.Clamp(math.Round(Time - ST(),1),0,30) == 0 then VotePanel:Remove() return end
+				if math.Clamp(math.Round(Time - CT(),1),0,30) == 0 then VotePanel:Remove() return end
 				if not GetGlobalBool("AAS.Voting",false) then return end
 				selected = self.Index
 				SendVote(self.Index)
@@ -276,7 +276,7 @@ else	-- Cient
 			draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 		end
 		button.DoClick = function(self)
-			if math.Clamp(math.Round(Time - ST(),1),0,30) == 0 then VotePanel:Remove() return end
+			if math.Clamp(math.Round(Time - CT(),1),0,30) == 0 then VotePanel:Remove() return end
 			if not GetGlobalBool("AAS.Voting",false) then return end
 			selected = self.Index
 			SendVote(self.Index)
@@ -289,8 +289,6 @@ else	-- Cient
 		RTV = net.ReadBool()
 		Choices = net.ReadTable()
 
-		print(Time, RTV)
-		PrintTable(Choices)
 		VoteMenu()
 	end)
 end
