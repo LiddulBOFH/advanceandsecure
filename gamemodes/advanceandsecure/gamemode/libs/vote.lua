@@ -64,8 +64,6 @@ if SERVER then
 
 		AAS.RTV = (#Maps > 0)
 
-		local CheckTime = 5
-
 		CurrentVoteList = table.Copy(Choices)
 
 		--[[
@@ -76,7 +74,7 @@ if SERVER then
 		]]--
 
 		net.Start("AAS.OpenVotes")
-			net.WriteFloat(ST() + CheckTime)
+			net.WriteFloat(ST() + 7.5)
 			net.WriteBool(AAS.RTV)
 			net.WriteTable(Choices)
 		net.Broadcast()
@@ -179,15 +177,11 @@ else	-- Cient
 			surface.DrawRect(0,0,w,36)
 
 			draw.SimpleText("MAP VOTING","BasicFontLarge",w / 2,10,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_TOP)
-			local TimeLeft = math.Clamp(math.Round(Time - SysTime(),1),0,30)
+			local TimeLeft = math.Clamp(math.Round(Time - ST(),1),0,30)
 
 			if TimeLeft < 10 then surface.SetDrawColor(200,0,0) else surface.SetDrawColor(0,200,0) end
 			surface.DrawRect(0,h - 12,w * (TimeLeft / 30),12)
 			draw.SimpleText("TIME REMAINING: " .. tostring(TimeLeft),"BasicFont",w / 2,h,Colors.White,TEXT_ALIGN_CENTER,TEXT_ALIGN_BOTTOM)
-		end
-		VotePanel.Think	= function()
-			local TimeLeft = math.Clamp(math.Round(Time - SysTime(),1),0,30)
-			if TimeLeft == 0 then VotePanel:Remove() end
 		end
 		VotePanel:SetTitle("")
 
@@ -217,6 +211,7 @@ else	-- Cient
 				draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 			end
 			button.DoClick = function(self)
+				if math.Clamp(math.Round(Time - ST(),1),0,30) == 0 then VotePanel:Remove() return end
 				if not GetGlobalBool("AAS.Voting",false) then return end
 				selected = self.Index
 				SendVote(self.Index)
@@ -249,6 +244,7 @@ else	-- Cient
 				draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 			end
 			button.DoClick = function(self)
+				if math.Clamp(math.Round(Time - ST(),1),0,30) == 0 then VotePanel:Remove() return end
 				if not GetGlobalBool("AAS.Voting",false) then return end
 				selected = self.Index
 				SendVote(self.Index)
@@ -280,6 +276,7 @@ else	-- Cient
 			draw.SimpleText(self.ID,"BasicFont14",h + 4,h / 2,Colors.White,TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 		end
 		button.DoClick = function(self)
+			if math.Clamp(math.Round(Time - ST(),1),0,30) == 0 then VotePanel:Remove() return end
 			if not GetGlobalBool("AAS.Voting",false) then return end
 			selected = self.Index
 			SendVote(self.Index)

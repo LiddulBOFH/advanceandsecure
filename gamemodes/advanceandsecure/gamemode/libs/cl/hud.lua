@@ -509,6 +509,7 @@ do
 		local function DoPoints(drawDepth, drawSkybox, draw3DSkybox)
 			if draw3DSkybox then return end
 
+			if AAS.Funcs.GetSetting("Non-linear", false) == true then return end
 			if not AAS.State.FullLine then return end
 			for I = 2, #AAS.State.FullLine do
 				local P1 = AAS.State.FullLine[I - 1]
