@@ -24,7 +24,7 @@ end
 
 GMT.Save	= function(MapData) -- Return false to abort saving for any reason
 	-- Save the links between points
-	if AAS.Funcs.GetSetting("Non-linear", false) == true then
+	if AAS.Funcs.GetSetting("Non-linear", false) == false then
 		if not AAS.State.Data["Line"] then ErrorNoHalt("No line defined") return false end
 		MapData.Data.Line	= AAS.State.Data["Line"]
 
