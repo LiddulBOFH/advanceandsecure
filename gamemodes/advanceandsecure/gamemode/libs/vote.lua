@@ -83,7 +83,7 @@ if SERVER then
 
 		UpdateVotes()
 
-		timer.Simple(CheckTime,AAS.Funcs.countVotes)
+		timer.Simple(7.5, AAS.Funcs.countVotes)
 	end
 	AAS.Funcs.openVotes = OpenVotes
 
@@ -288,6 +288,9 @@ else	-- Cient
 		Time = net.ReadFloat()
 		RTV = net.ReadBool()
 		Choices = net.ReadTable()
+
+		print(Time, RTV)
+		PrintTable(Choices)
 		VoteMenu()
 	end)
 end
