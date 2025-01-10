@@ -1,5 +1,5 @@
 # Advance and Secure
-> Fully fledged garry's mod gamemode that leans on ACF-3
+> Fully fledged Garry's Mod gamemode that leans on ACF-3
 
 [![A&S Discord](https://img.shields.io/discord/1113662258950705235?label=A%26S%20Discord&style=flat-square)](https://discord.gg/YDP72rfNgD)
 [![ACF Discord](https://img.shields.io/discord/654142834030542878?label=ACF%20Discord&style=flat-square)](https://discord.gg/jgdzysxjST)
