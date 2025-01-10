@@ -18,7 +18,7 @@ AAS.SettingsFuncs.Remove(GMT, "Max Rate")
 AAS.SettingsFuncs.Flag(GMT, "Disable Requisition")
 
 GMT.Init	= function(MapData)	-- Setup whatever settings for the map to run here. Should be a clean slate
-
+	AAS.Funcs.UpdateState()
 end
 
 GMT.Load	= function(MapData) -- Assemble the map here, like placing points/spawns
