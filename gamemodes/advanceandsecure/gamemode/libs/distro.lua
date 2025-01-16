@@ -9,10 +9,11 @@ if SERVER then
 
 		for k,v in pairs(Dupes) do
 			local FileSize = file.Size("aas/dupes/" .. v,"DATA")
-			DupeList[string.StripExtension(v)] = {txt = v,size = FileSize,strsize = math.Round(FileSize / 1024,2) .. "kB"}
+			DupeList[string.StripExtension(v)] = {txt = v, size = FileSize, strsize = math.Round(FileSize / 1024,2) .. "kB"}
 		end
 	end
 	BuildDupeList()
+	AAS.Funcs.BuildDupeList = BuildDupeList
 
 	local FileQueue = {}
 	local function SendChunk(ply)

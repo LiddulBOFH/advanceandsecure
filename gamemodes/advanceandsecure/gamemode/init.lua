@@ -111,6 +111,21 @@ do	-- Organizing stuff :)
 			if not ((ply == NULL) or (ply:IsSuperAdmin())) then aasMsg({Colors.ErrorCol, "You aren't allowed to run that command!"},ply) return else AAS.Funcs.openVotes() end
 		end)
 
-		-- command to force rebuild the dupe table
+		concommand.Add("aas_status", function(ply)
+			if not ((ply == NULL) or (ply:IsSuperAdmin())) then aasMsg({Colors.ErrorCol, "You aren't allowed to run that command!"},ply) return else
+				MsgN("===== [AAS STATUS] =====")
+
+				MsgN("Editmode is currently: " .. (GetGlobalBool("EditMode",false) and "ACTIVE" or "INACTIVE"))
+				MsgN("Game is currently: " .. (AAS.State.Active and "RUNNING" or "HALTED"))
+				MsgN("Gamemode is :" .. AAS.State.Mode)
+				MsgN("Ticket balance is: " .. ("BLUFOR: " .. AAS.State.Teams.BLUFOR.Tickets) .. " | " .. ("OPFOR: " .. AAS.State.Teams.OPFOR.Tickets))
+
+				MsgN("===== [END STATUS] =====")
+			end
+		end)
+
+		concommand.Add("aas_rebuilddupelist", function(ply)
+			if not ((ply == NULL) or (ply:IsSuperAdmin())) then aasMsg({Colors.ErrorCol, "You aren't allowed to run that command!"},ply) return else AAS.Funcs.BuildDupeList() end
+		end)
 	end
 end

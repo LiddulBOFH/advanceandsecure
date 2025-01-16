@@ -82,7 +82,7 @@ do
 	do	-- Main UI
 
 		local MinimapScale	= CreateClientConVar("aas_minimap_scale", 1, true, false, "Sets the scale for the minimap, and all attached elements.", 0.1, 2)
-		local MinimapPos	= CreateClientConVar("aas_minimap_pos", 0, true, false, "Position of the minimap. 0 - Bottom left, 1 - Bottom right, 2 - Top right, 3 - Top left", 0, 3)
+		local MinimapPos	= CreateClientConVar("aas_minimap_pos", 1, true, false, "Position of the minimap. 0 - Bottom left, 1 - Bottom right, 2 - Top right, 3 - Top left", 0, 3)
 		local NoMat = Material("materials/gui/noicon.png", "")
 		local EyeA	= EyeAngles
 		local EyeP	= EyePos
